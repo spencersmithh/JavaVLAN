@@ -8,7 +8,7 @@ public class Main {
             System.out.println("Please specify switch 1 id: ");
             return;
         }
-        int s1ID = Integer.parseInt(args[0]);
+        String s1ID = args[0];
 
         Switch s1 = new Switch(s1ID);
     }
