@@ -4,12 +4,18 @@ import java.net.DatagramSocket;
 import java.util.Arrays;
 public class Switch {
     // TODO: get id as command-line argument, parses the config file to get its neighbors
-    //
-    private int id;
-    private Parser parser = new Parser();
+    private String name;
+    private InetAddress IP;
+    private int portNumber;
+    private final Parser parser;
+    private Arrays neighbors[];
 
-    public Switch(int id) {
-        id = this.id;
 
+    public Switch(String name) {
+        name = this.name;
+        parser = new Parser(name);
+        IP = parser.getID()[0];
+        portNumber = parser.getID()[1];
+        neighbors = getNeighbors();
     }
 }
