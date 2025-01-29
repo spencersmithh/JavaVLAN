@@ -1,19 +1,24 @@
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 public class Host {
     String name = "";
-    int port = 0;
-    String ip = "";
 
-    //String id = parser.getID(name);
-    //port = split from id
-    //ip = split from id
-
-    //String id = ip + ":" + port;
+    Parser parser = new Parser(name);
+    String[] id = parser.getID();
+    String port = id[0];
+    InetAddress ip = InetAddress.getByName(parser.getID()[0]);
 
     String frameMessage;
-    public Host(String id){
+
+    public static void main(String[] args) {
+
+    }
+
+    public Host(String id) throws UnknownHostException {
 
     }
 
@@ -37,6 +42,7 @@ public class Host {
         return null;
     }
     private byte[] convertBinaryToBytes(String binary){
-        return null;
+        byte[] newBytes = new BigInteger(binary, 2).toByteArray();
+        return newBytes;
     }
 }
