@@ -3,6 +3,8 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.HashMap;
+
 public class Switch {
     public static void main(String[] args) throws Exception {
         String switchID = args[0];
@@ -19,6 +21,7 @@ public class Switch {
         String[] neighbors = parser.getNeighbors();
 
         // create the switch table for port and hosts
+        HashMap<String, String> switchTable = new HashMap<>();
 
         DatagramSocket socket = new DatagramSocket(portNumber);
         DatagramPacket frameRequest = new DatagramPacket(new byte[1024], 1024);
@@ -43,12 +46,20 @@ public class Switch {
 
             // update the table with the srcMAC if it's not already in there
 
-            // check to see if destMAC is in the table
+            // check to see if destMAC is in the table or a neighbor
 
             // if it is, send directly to the destMAC
 
             // else, flood the LAN and adjust the table
         }
+    }
+
+    public void updateTable() {
+
+    }
+
+    public void checkTable() {
+
     }
 
     // TODO: receive frame, decipher the frame, srcMAC, destMAC, search table, flood, adjust table
