@@ -27,6 +27,19 @@ public class Switch {
             socket.receive(frameRequest);
             byte[] frame = Arrays.copyOf(frameRequest.getData(), frameRequest.getLength());
             // get the srcMAC and destMAC by deciphering the frame
+            try {
+                InetAddress srcIP = InetAddress.getByName("");
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            int srcPortNumber;
+
+            try {
+                InetAddress destIP = InetAddress.getByName("");
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            int destPortNumber;
 
             // update the table with the srcMAC if it's not already in there
 
