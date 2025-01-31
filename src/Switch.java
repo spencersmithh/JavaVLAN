@@ -94,12 +94,4 @@ public class Switch {
 
         }
     }
-
-    public void updateTable() {
-
-    }
-
-    public void checkTable() {
-
-    }
 }
