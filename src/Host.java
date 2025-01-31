@@ -1,3 +1,5 @@
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
@@ -10,19 +12,28 @@ public class Host {
     InetAddress ip;
     String[] neighbors;
 
-    public static void main(String[] args) throws UnknownHostException {
+    public static void main(String[] args) throws Exception {
         String testString = "Hello";
         Host host = new Host("hostA");
         String destinationMac = "hostB";
+        
+        //TODO Replace hard coded values with generated, and/or user specified values
 
         String frameMessage = host.name+";"+destinationMac+";"+testString;
 
         byte[] frameBytes = host.convertStringToBytes(frameMessage);
         String[] neighborID = host.getNeighborsID();
-        String neighborsPort = neighborID[1];
+        int neighborsPort = Integer.parseInt(neighborID[1]);
         InetAddress neighborsIP = InetAddress.getByName(neighborID[0]);
 
+        DatagramSocket socket = new DatagramSocket();
+        DatagramPacket request = new DatagramPacket(frameBytes, frameBytes.length, neighborsIP, neighborsPort);
+        socket.send(request);
+        DatagramPacket reply = new DatagramPacket(new byte[1024], 1024);
+        socket.receive(reply);
+        socket.close();
 
+        //This is a partial implementation of the client part, may not fully work
         //TODO send frameBytes to neighbor, Listen for incoming frames
 
     }
