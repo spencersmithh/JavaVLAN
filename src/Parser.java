@@ -1,5 +1,7 @@
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -19,16 +21,12 @@ public class Parser {
         }
     }
 
-    public String[] getID() {
+    public String getID() {
         String rawID = properties.getProperty(name);
         if (rawID == null) {
             throw new IllegalArgumentException("No entry found for " + name + " in config.properties");
         }
-        rawID = rawID.replaceAll("()", "");
-        String[] id = rawID.split(",");
-        if (id.length != 2) {
-            throw new IllegalArgumentException("Invalid format for entry: " + name + " in config.properties");
-        }
+        String id = rawID.replaceAll("()", "");
         return id;
     }
 
@@ -39,5 +37,17 @@ public class Parser {
         }
         rawConnections = rawConnections.replaceAll("()", "");
         return rawConnections.split(",");
+    }
+
+    public String getMAC() {
+        return name;
+    }
+
+    public InetAddress getIP() throws UnknownHostException {
+        return InetAddress.getByName(getID().split(",")[0]);
+    }
+
+    public Integer getPort(){
+        return Integer.parseInt(getID().split(",")[1]);
     }
 }

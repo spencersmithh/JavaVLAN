@@ -4,30 +4,34 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 
 public class Host {
     String name;
-    String[] id;
-    String port;
+    String id;
+    Integer port;
     InetAddress ip;
-    String[] neighbors;
+    static String[] neighbors;
 
     public static void main(String[] args) throws Exception {
-        String testString = "Hello";
-        Host host = new Host("hostA");
-        String destinationMac = "hostB";
-        
-        //TODO Replace hard coded values with generated, and/or user specified values
+        Scanner input = new Scanner(System.in);
+        System.out.println("Enter host name(ex. \"hostA\"): ");
+        String hostname = input.nextLine();
+        Host host = new Host(hostname);
 
-        String frameMessage = host.name+";"+destinationMac+";"+testString;
+        System.out.println("Enter destination name/MAC(ex. \"hostB\"): ");
+        String destinationMac = input.nextLine();
+
+        System.out.println("Enter packet message ");
+        String message = input.nextLine();
+
+        String frameMessage = host.name+";"+destinationMac+";"+message;
 
         byte[] frameBytes = host.convertStringToBytes(frameMessage);
-        String[] neighborID = host.getNeighborsID();
-        int neighborsPort = Integer.parseInt(neighborID[1]);
-        InetAddress neighborsIP = InetAddress.getByName(neighborID[0]);
+        Parser neighbor = getNeighborParser();
 
         DatagramSocket socket = new DatagramSocket();
-        DatagramPacket request = new DatagramPacket(frameBytes, frameBytes.length, neighborsIP, neighborsPort);
+        DatagramPacket request = new DatagramPacket(frameBytes, frameBytes.length, neighbor.getIP(), neighbor.getPort());
         socket.send(request);
         DatagramPacket reply = new DatagramPacket(new byte[1024], 1024);
         socket.receive(reply);
@@ -41,15 +45,13 @@ public class Host {
         this.name = name;
         Parser parser = new Parser(name);
         this.id = parser.getID();
-        this.port=id[1];
-        this.ip = InetAddress.getByName(id[0]);
+        this.port = parser.getPort();
+        this.ip = parser.getIP();
 
         this.neighbors = parser.getNeighbors();
     }
-    private String[] getNeighborsID() {
-        String neighbor = neighbors[0];
-        Parser neighborParser = new Parser(neighbor);
-        return neighborParser.getID();
+    private static Parser getNeighborParser() {
+        return new Parser(neighbors[0]);
     }
     private byte[] convertStringToBytes(String string){
         Charset UTF_8 = StandardCharsets.UTF_8;
