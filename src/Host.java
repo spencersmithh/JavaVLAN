@@ -4,33 +4,33 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 public class Host {
-    String name = "hostA";
-
-    Parser parser = new Parser(name);
-    //String[] id = parser.getID();
-    //String port = id[1];
-    //InetAddress ip = InetAddress.getByName(id[0]);
-
-    String frameMessage;
+    String name;
+    String[] id;
+    String port;
+    InetAddress ip;
+    String[] neighbors;
 
     public static void main(String[] args) throws UnknownHostException {
         String testString = "Hello";
         Host host = new Host("hostA");
-        
-        //This code block just tests those two functions
-        /*
-        byte[] bytes = host.convertStringToBytes(testString);
-        System.out.println(bytes);
-        String outString = host.convertBytestoString(bytes);
-        System.out.println(outString);
-         */
-    }
+        String destinationMac = "hostB";
 
+        String frameMessage = host.name+";"+destinationMac+";"+testString;
+
+        byte[] bytes = host.convertStringToBytes(frameMessage);
+        String convertedMessage = host.convertBytestoString(bytes);
+
+    }
     public Host(String name) throws UnknownHostException {
+        this.name = name;
+        Parser parser = new Parser(name);
+        this.id = parser.getID();
+        this.port=id[1];
+        this.ip = InetAddress.getByName(id[0]);
 
+        this.neighbors = parser.getNeighbors();
     }
-
-    public byte[] convertStringToBytes(String string){
+    private byte[] convertStringToBytes(String string){
         Charset UTF_8 = StandardCharsets.UTF_8;
         return string.getBytes(UTF_8);
     }
