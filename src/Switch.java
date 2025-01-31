@@ -1,9 +1,6 @@
-import javax.xml.crypto.Data;
 import java.net.InetAddress;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.HashMap;
 
 public class Switch {
@@ -95,13 +92,6 @@ public class Switch {
 
             }
 
-            // update the table with the srcMAC if it's not already in there
-
-            // check to see if destMAC is in the table or a neighbor
-
-            // if it is, send directly to the destMAC
-
-            // else, flood the LAN and adjust the table
         }
     }
 
@@ -112,15 +102,4 @@ public class Switch {
     public void checkTable() {
 
     }
-
-    // TODO: receive frame, decipher the frame, srcMAC, destMAC, search table, flood, adjust table
-
-    // LUKAS: DECIPHER FRAME (GET SRC AND DEST MACS), LATER: FLOODING
-        //source;dest;message
-
-
-
-    // ELAINE: RECEIVES FRAME
-
-    // BOTH: HASH MAP/TABLE
 }
