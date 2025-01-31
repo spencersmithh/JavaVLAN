@@ -17,8 +17,13 @@ public class Host {
 
         String frameMessage = host.name+";"+destinationMac+";"+testString;
 
-        byte[] bytes = host.convertStringToBytes(frameMessage);
-        String convertedMessage = host.convertBytestoString(bytes);
+        byte[] frameBytes = host.convertStringToBytes(frameMessage);
+        String[] neighborID = host.getNeighborsID();
+        String neighborsPort = neighborID[1];
+        InetAddress neighborsIP = InetAddress.getByName(neighborID[0]);
+
+
+        //TODO send frameBytes to neighbor, Listen for incoming frames
 
     }
     public Host(String name) throws UnknownHostException {
@@ -29,6 +34,11 @@ public class Host {
         this.ip = InetAddress.getByName(id[0]);
 
         this.neighbors = parser.getNeighbors();
+    }
+    private String[] getNeighborsID() {
+        String neighbor = neighbors[0];
+        Parser neighborParser = new Parser(neighbor);
+        return neighborParser.getID();
     }
     private byte[] convertStringToBytes(String string){
         Charset UTF_8 = StandardCharsets.UTF_8;
