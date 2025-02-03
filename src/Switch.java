@@ -46,11 +46,8 @@ public class Switch {
 //            if the destMAC is known forward to known location
             if (switchTable.containsKey(dest.getMAC())){
                 System.out.println("destMac Known. forwarding packet...");
-                // load frame into bytes for forwarding
                 byte[] response = frame.getBytes();
-                // create the packet
                 DatagramPacket forwardPacket = new DatagramPacket(response, response.length, dest.getIP(), dest.getPort());
-                // send the packet
                 socket.send(forwardPacket);
                 System.out.println("packet forwarded to: "+ dest.getMAC() + ":" + dest.getID());
 

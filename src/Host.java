@@ -14,33 +14,41 @@ public class Host {
     static String[] neighbors;
 
     public static void main(String[] args) throws Exception {
-        Scanner input = new Scanner(System.in);
-        System.out.println("Enter host name(ex. \"hostA\"): ");
-        String hostname = input.nextLine();
+        String destinationMac = "";
+        String message = "";
+
+        if (args[0].isEmpty()){
+            System.out.println("hostname/arguments not given in run configuration...");
+            System.exit(1);
+        }
+        String hostname = args[0];
         Host host = new Host(hostname);
 
-        System.out.println("Enter destination name/MAC(ex. \"hostB\"): ");
-        String destinationMac = input.nextLine();
+        while (true) {
+            Scanner keyInput = new Scanner(System.in);
+            System.out.println("Enter the destMAC and message seperated by a space");
+            String userRequest = keyInput.nextLine();
 
-        System.out.println("Enter packet message ");
-        String message = input.nextLine();
+            destinationMac = userRequest.split(" ",2)[0];
+            message = userRequest.split(" ",2)[1];
 
-        String frameMessage = host.name+";"+destinationMac+";"+message;
+            String frameMessage = host.name + ";" + destinationMac + ";" + message;
 
-        byte[] frameBytes = host.convertStringToBytes(frameMessage);
-        Parser neighbor = getNeighborParser();
+            byte[] frameBytes = host.convertStringToBytes(frameMessage);
+            Parser neighbor = getNeighborParser();
 
-        DatagramSocket socket = new DatagramSocket();
-        DatagramPacket request = new DatagramPacket(frameBytes, frameBytes.length, neighbor.getIP(), neighbor.getPort());
-        socket.send(request);
-        DatagramPacket reply = new DatagramPacket(new byte[1024], 1024);
-        socket.receive(reply);
-        socket.close();
-
+            DatagramSocket socket = new DatagramSocket();
+            DatagramPacket request = new DatagramPacket(frameBytes, frameBytes.length, neighbor.getIP(), neighbor.getPort());
+            socket.send(request);
+            DatagramPacket reply = new DatagramPacket(new byte[1024], 1024);
+            socket.receive(reply);
+            socket.close();
+            }
+            //listening...
+            }
         //This is a partial implementation of the client part, may not fully work
         //TODO send frameBytes to neighbor, Listen for incoming frames
 
-    }
     public Host(String name) throws UnknownHostException {
         this.name = name;
         Parser parser = new Parser(name);
