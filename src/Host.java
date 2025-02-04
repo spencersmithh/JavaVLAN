@@ -5,34 +5,66 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Scanner;
 
-public class Host implements Runnable {
+public class Host{
     private String name;
     private String id;
     private int port;
     private InetAddress ip;
-    private Object[] mac;
+    private String[] mac;
     static String[] neighbors;
-    private DatagramSocket socket;
+    private static DatagramSocket socket;
     private volatile boolean running = true;
 
-    public void run() {
-        while (true) {
-            try {
-                byte[] buffer = new byte[1024];
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                socket.receive(packet);
+    public Host(String name) throws UnknownHostException, SocketException {
+        this.name = name;
+        Parser parser = new Parser(name);
+        id = parser.getID();
+        port = parser.getPort();
+        ip = parser.getIP();
+        mac = parser.getMAC();
+        socket = new DatagramSocket(port);
 
-                processPacket(packet);
-            } catch (IOException e) {
-                if (!running) {
-                    break;
-                }
-                e.printStackTrace();
-            }
-        }
+        neighbors = parser.getNeighbors();
     }
 
-    private void processPacket(DatagramPacket packet) {
+        static class listen implements Runnable {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        byte[] buffer = new byte[1024];
+                        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                        socket.receive(packet);
+
+                        String inputFrame = new String(packet.getData(),0, packet.getLength());
+
+                        // Parse frame
+                        String[] frameParts = inputFrame.split(";");
+                        if (frameParts.length < 3){
+                            System.out.println("Frame has incorrect length");
+                            continue;
+                        }
+
+                        Parser incommingMAC = new Parser(frameParts[0]);
+                        Parser ourMAC = new Parser(frameParts[1]);
+
+                        // TODO: test if the destination MAC matches the current host MAC.
+                        //      if it does, print out the message.
+                        //      if it doesn't, ignore.
+
+                        // somehow figure out where to put the sock.close() statement where it's not unreachable.
+                        if (dest.getMAC() == src.getMAC()) {
+                            src.processPacket(reply);
+                        }
+
+                        processPacket(packet);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+
+    private static void processPacket(DatagramPacket packet) {
         System.out.println("Received packet from: " + packet.getAddress().getHostAddress());
         String data = new String(packet.getData(), 0, packet.getLength());
         System.out.println("Data: " + data);
@@ -62,7 +94,7 @@ public class Host implements Runnable {
         destinationMac[0] = userRequest.split(" ",3)[0];
         destinationMac[1] = userRequest.split(" ",3)[1];
         message = userRequest.split(" ",3)[2];
-        String frameMessage = host.name + ";" + destinationMac[0] + " " + destinationMac[1] + ";" + message;
+        String frameMessage = Arrays.toString(host.mac) +";"+ destinationMac[0] + "," + destinationMac[1] + ";" + message;
 
         byte[] frameBytes = host.convertStringToBytes(frameMessage);
         Parser neighbor = getNeighborParser();
@@ -76,56 +108,18 @@ public class Host implements Runnable {
             DatagramPacket request = new DatagramPacket(frameBytes, frameBytes.length, neighbor.getIP(), neighbor.getPort());
             socket.send(request);
 
-            System.out.println("The host named " + hostname + " has send a message to a device with the following MAC address: " + destinationMac);
+            System.out.println("The host named " + hostname + " has send a message to a device with the following MAC address: " + Arrays.toString(destinationMac));
 
             while (host.running) { // listening...
                 DatagramPacket reply = new DatagramPacket(new byte[1024], 1024);
                 socket.receive(reply);
-                String frame = new String(reply.getData(),0, reply.getLength());
-
-                byte[] response = Arrays.copyOf(
-                        reply.getData(),
-                        reply.getLength()
-                );
-
-                // Parse frame
-                String[] frameParts = frame.split(";");
-                if (frameParts.length < 3){
-                    System.out.println("Frame has incorrect length");
-                    continue;
-                }
-
-                Parser src = new Parser(frameParts[0]);
-                Parser dest = new Parser(frameParts[1]);
-
-                // TODO: test if the destination MAC matches the current host MAC.
-                //      if it does, print out the message.
-                //      if it doesn't, ignore.
-
-                // somehow figure out where to put the sock.close() statement where it's not unreachable.
-                if (dest.getMAC() == host.getMac()) {
-                    host.processPacket(reply);
-                }
             }
 
-            host.stop();
-            thread.join();
         } catch (SocketException e) {
             e.printStackTrace();
         }
     }
 
-    public Host(String name) throws UnknownHostException, SocketException {
-        this.name = name;
-        Parser parser = new Parser(name);
-        id = parser.getID();
-        port = parser.getPort();
-        ip = parser.getIP();
-        mac = parser.getMAC();
-        socket = new DatagramSocket(port);
-
-        neighbors = parser.getNeighbors();
-    }
     public Object[] getMac() {
         return mac;
     }
