@@ -17,7 +17,7 @@ public class Switch {
 
         // create the switch table. format = {"macName":"IP:Port"}
             // we are not using the table values only using it for name lookups, maybe replace? or just keep for fast lookup
-        HashMap<String, String> switchTable = new HashMap<>();
+        HashMap<String, String[]> switchTable = new HashMap<>();
 
         DatagramSocket socket = new DatagramSocket(parser.getPort());
         DatagramPacket frameRequest = new DatagramPacket(new byte[1024], 1024);
@@ -38,18 +38,18 @@ public class Switch {
             Parser dest = new Parser(frameParts[1]);
 
 //            adds sourceMAC to IP table if not found
-            if (!switchTable.containsKey(src.getMAC())){
-                switchTable.put(src.getMAC(), src.getID());
-                System.out.println("added " + src.getMAC() + " to hashmap");
+            if (!switchTable.containsKey(src.getID())){
+                switchTable.put(src.getID(), src.getMAC());
+                System.out.println("added " + src.getID() + " to hashmap");
             }
 
 //            if the destMAC is known forward to known location
-            if (switchTable.containsKey(dest.getMAC())){
+            if (switchTable.containsKey(dest.getID())){
                 System.out.println("destMac Known. forwarding packet...");
                 byte[] response = frame.getBytes();
                 DatagramPacket forwardPacket = new DatagramPacket(response, response.length, dest.getIP(), dest.getPort());
                 socket.send(forwardPacket);
-                System.out.println("packet forwarded to: "+ dest.getMAC() + ":" + dest.getID());
+                System.out.println("packet forwarded to: "+ dest.getID() + ":" + dest.getMAC());
 
             } else {
                 // Flooding
@@ -62,7 +62,7 @@ public class Switch {
                     if (!newNeighborParser.getMAC().equals(src.getMAC())){
                         DatagramPacket flooder = new DatagramPacket(frame.getBytes(), frame.length(), newNeighborParser.getIP(), newNeighborParser.getPort());
                         socket.send(flooder);
-                        System.out.println("Sent flood packet to: "+ newNeighborParser.getMAC() +":"+ newNeighborParser.getID());
+                        System.out.println("Sent flood packet to: "+ newNeighborParser.getID() +":"+ newNeighborParser.getMAC());
                     }
                 }
                 System.out.println("Flooding finished");

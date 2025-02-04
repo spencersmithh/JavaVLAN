@@ -1,22 +1,20 @@
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Scanner;
 
-public class Host {
-    String name;
-    String id;
-    Integer port;
-    InetAddress ip;
-    String mac;
+public class Host implements Runnable {
+    private String name;
+    private String id;
+    private int port;
+    private InetAddress ip;
+    private Object[] mac;
     static String[] neighbors;
+    private DatagramSocket socket;
+    private volatile boolean running = true;
 
-    /*
     public void run() {
         while (true) {
             try {
@@ -34,10 +32,20 @@ public class Host {
         }
     }
 
-     */
+    private void processPacket(DatagramPacket packet) {
+        System.out.println("Received packet from: " + packet.getAddress().getHostAddress());
+        String data = new String(packet.getData(), 0, packet.getLength());
+        System.out.println("Data: " + data);
+    }
+
+    public void stop() {
+        running = false;
+        socket.close();
+    }
 
     public static void main(String[] args) throws Exception {
-        String destinationMac = "";
+        // START OF USER INPUT AND DEFINING VARIABLES
+        String[] destinationMac = new String[2];
         String message = "";
 
         if (args[0].isEmpty()){
@@ -48,64 +56,81 @@ public class Host {
         Host host = new Host(hostname);
 
         Scanner keyInput = new Scanner(System.in);
-        System.out.println("Enter the destMAC and message separated by a space");
+        System.out.println("Enter the destMAC (IP and port number) and message separated by a space");
         String userRequest = keyInput.nextLine();
 
-        destinationMac = userRequest.split(" ",3)[0] + " " + userRequest.split(" ",3)[1];
+        destinationMac[0] = userRequest.split(" ",3)[0];
+        destinationMac[1] = userRequest.split(" ",3)[1];
         message = userRequest.split(" ",3)[2];
-
-        String frameMessage = host.name + ";" + destinationMac + ";" + message;
+        String frameMessage = host.name + ";" + destinationMac[0] + " " + destinationMac[1] + ";" + message;
 
         byte[] frameBytes = host.convertStringToBytes(frameMessage);
         Parser neighbor = getNeighborParser();
 
-        DatagramSocket socket = new DatagramSocket();
-        DatagramPacket request = new DatagramPacket(frameBytes, frameBytes.length, neighbor.getIP(), neighbor.getPort());
-        socket.send(request);
+        // START OF UDP IMPLEMENTATION
+        try {
+            DatagramSocket socket = host.getSocket();
+            Thread thread = new Thread(host);
+            thread.start();
 
-        System.out.println("The host named " + hostname + " has send a message to a device with the following MAC address: " + destinationMac);
+            DatagramPacket request = new DatagramPacket(frameBytes, frameBytes.length, neighbor.getIP(), neighbor.getPort());
+            socket.send(request);
 
-        while (true) { // listening...
-            DatagramPacket reply = new DatagramPacket(new byte[1024], 1024);
-            socket.receive(reply);
-            String frame = new String(reply.getData(),0, reply.getLength());
+            System.out.println("The host named " + hostname + " has send a message to a device with the following MAC address: " + destinationMac);
 
-            byte[] response = Arrays.copyOf(
-                    reply.getData(),
-                    reply.getLength()
-            );
+            while (host.running) { // listening...
+                DatagramPacket reply = new DatagramPacket(new byte[1024], 1024);
+                socket.receive(reply);
+                String frame = new String(reply.getData(),0, reply.getLength());
 
-            System.out.println(host.convertBytesToString(response));
-            System.out.println("Frame received: " + frame);
+                byte[] response = Arrays.copyOf(
+                        reply.getData(),
+                        reply.getLength()
+                );
 
-            // Parse frame
-            String[] frameParts = frame.split(";");
-            if (frameParts.length < 3){
-                System.out.println("Frame has incorrect length");
-                continue;
+                // Parse frame
+                String[] frameParts = frame.split(";");
+                if (frameParts.length < 3){
+                    System.out.println("Frame has incorrect length");
+                    continue;
+                }
+
+                Parser src = new Parser(frameParts[0]);
+                Parser dest = new Parser(frameParts[1]);
+
+                // TODO: test if the destination MAC matches the current host MAC.
+                //      if it does, print out the message.
+                //      if it doesn't, ignore.
+
+                // somehow figure out where to put the sock.close() statement where it's not unreachable.
+                if (dest.getMAC() == host.getMac()) {
+                    host.processPacket(reply);
+                }
             }
 
-            Parser src = new Parser(frameParts[0]);
-            Parser dest = new Parser(frameParts[1]);
-
-            // TODO: test if the destination MAC matches the current host MAC.
-            //      if it does, print out the message.
-            //      if it doesn't, ignore.
-
-            // somehow figure out where to put the sock.close() statement where it's not unreachable.
+            host.stop();
+            thread.join();
+        } catch (SocketException e) {
+            e.printStackTrace();
         }
-        // socket.close();
     }
 
-    public Host(String name) throws UnknownHostException {
+    public Host(String name) throws UnknownHostException, SocketException {
         this.name = name;
         Parser parser = new Parser(name);
         id = parser.getID();
         port = parser.getPort();
         ip = parser.getIP();
         mac = parser.getMAC();
+        socket = new DatagramSocket(port);
 
         neighbors = parser.getNeighbors();
+    }
+    public Object[] getMac() {
+        return mac;
+    }
+    private DatagramSocket getSocket() {
+        return socket;
     }
     private static Parser getNeighborParser() {
         return new Parser(neighbors[0]);

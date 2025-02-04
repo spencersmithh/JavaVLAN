@@ -24,14 +24,12 @@ public class Parser {
         }
     }
 
-    public String getID() {
-        String rawID = properties.getProperty(name);
-        if (rawID == null) {
+    public String[] getMAC() {
+        String rawMac = properties.getProperty(name);
+        if (rawMac == null) {
             throw new IllegalArgumentException("No entry found for " + name + " in config.properties");
         }
-        // pretty sure the following line does nothing because "()" doesn't actually appear anywhere in the config file...
-        String id = rawID.replaceAll("()", "");
-        return id;
+        return rawMac.split(",");
     }
 
     public String[] getNeighbors() {
@@ -42,18 +40,15 @@ public class Parser {
         return rawConnections.split(",");
     }
 
-    public String getMAC() { // does this actually return the mac, or just the id/name?
-        return name; // my suggestion: getIP() + " " + getPort(); however, this would mean we'd have to change some things in the rest of project
+    public String getID() {
+        return name;
     }
 
     public InetAddress getIP() throws UnknownHostException {
-        return InetAddress.getByName(getID().split(",")[0]);
+        return InetAddress.getByName(getMAC()[0]);
     }
 
     public Integer getPort(){
-        // This is split up like this because I couldn't figure out what was broken here before...
-        String portAsString = getID().split(",")[1];
-        int port = Integer.parseInt(portAsString);
-        return port;
+        return Integer.parseInt(getMAC()[1]);
     }
 }
