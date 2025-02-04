@@ -14,8 +14,11 @@ public class Parser {
 
         try (FileInputStream fis = new FileInputStream("src/config.properties")) {
             properties.load(fis);
+            /*
+            Not exactly sure what the following two lines actually do...
             String switch1ID=properties.getProperty("switch1");
             System.out.println(switch1ID);
+            */
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -26,6 +29,7 @@ public class Parser {
         if (rawID == null) {
             throw new IllegalArgumentException("No entry found for " + name + " in config.properties");
         }
+        // pretty sure the following line does nothing because "()" doesn't actually appear anywhere in the config file...
         String id = rawID.replaceAll("()", "");
         return id;
     }
@@ -35,12 +39,11 @@ public class Parser {
         if (rawConnections == null) {
             throw new IllegalArgumentException("No connection entries found for " + name + " in config.properties");
         }
-        rawConnections = rawConnections.replaceAll("()", "");
         return rawConnections.split(",");
     }
 
-    public String getMAC() {
-        return name;
+    public String getMAC() { // does this actually return the mac, or just the id/name?
+        return name; // my suggestion: getIP() + " " + getPort(); however, this would mean we'd have to change some things in the rest of project
     }
 
     public InetAddress getIP() throws UnknownHostException {
@@ -48,6 +51,9 @@ public class Parser {
     }
 
     public Integer getPort(){
-        return Integer.parseInt(getID().split(",")[1]);
+        // This is split up like this because I couldn't figure out what was broken here before...
+        String portAsString = getID().split(",")[1];
+        int port = Integer.parseInt(portAsString);
+        return port;
     }
 }
