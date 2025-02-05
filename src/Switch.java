@@ -38,6 +38,8 @@ public class Switch {
             Parser src = new Parser(frameParts[0]);
             Parser dest = new Parser(frameParts[1]);
 
+            String newFrame = switchID + ";" + frameParts[1] + ";" + frameParts[2];
+
 //            adds sourceMAC to IP table if not found
             if (!switchTable.containsKey(src.getID())){
                 switchTable.put(src.getID(), src.getMAC());
@@ -47,7 +49,7 @@ public class Switch {
 //            if the destMAC is known forward to known location
             if (switchTable.containsKey(dest.getID())){
                 System.out.println("destMac Known. forwarding packet...");
-                byte[] response = frame.getBytes();
+                byte[] response = newFrame.getBytes();
                 DatagramPacket forwardPacket = new DatagramPacket(response, response.length, dest.getIP(), dest.getPort());
                 socket.send(forwardPacket);
                 System.out.println("packet forwarded to: "+ dest.getID() + ":" + dest.getMAC());
@@ -61,7 +63,7 @@ public class Switch {
 
                     // check to stop sending back to source
                     if (!Arrays.equals(newNeighborParser.getMAC(), src.getMAC())){
-                        DatagramPacket flooder = new DatagramPacket(frame.getBytes(), frame.length(), newNeighborParser.getIP(), newNeighborParser.getPort());
+                        DatagramPacket flooder = new DatagramPacket(newFrame.getBytes(), newFrame.length(), newNeighborParser.getIP(), newNeighborParser.getPort());
                         socket.send(flooder);
                         System.out.println("Sent flood packet to: "+ newNeighborParser.getID() +":"+ Arrays.toString(newNeighborParser.getMAC()));
                     }
