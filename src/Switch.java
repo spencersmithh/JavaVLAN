@@ -1,6 +1,7 @@
 import java.net.InetAddress;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.SocketException;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -19,61 +20,66 @@ public class Switch {
         // switch table format = {"macName":"IP:Port"}
         HashMap<String, String[]> switchTable = new HashMap<>();
 
-        while (true) {
-            DatagramSocket socket = new DatagramSocket(parser.getPort());
-            DatagramPacket frameRequest = new DatagramPacket(new byte[1024], 1024);
+        try {
+            while (true) {
+                DatagramSocket socket = new DatagramSocket(parser.getPort());
+                DatagramPacket frameRequest = new DatagramPacket(new byte[1024], 1024);
 
-            socket.receive(frameRequest);
-            String frame = new String(frameRequest.getData(),0, frameRequest.getLength());
-            System.out.println("Frame received: " + frame);
+                socket.receive(frameRequest);
+                String frame = new String(frameRequest.getData(),0, frameRequest.getLength());
+                System.out.println("Frame received: " + frame);
 
-            // Parse frame
-            String[] frameParts = frame.split(";");
-            if (frameParts.length < 3){
-                System.out.println("Frame has incorrect length");
-                continue;
-            }
+                // Parse frame
+                String[] frameParts = frame.split(";");
+                if (frameParts.length < 3){
+                    System.out.println("Frame has incorrect length");
+                    continue;
+                }
 
-            Parser src = new Parser(frameParts[0]);
-            Parser dest = new Parser(frameParts[1]);
+                Parser src = new Parser(frameParts[0]);
+                Parser dest = new Parser(frameParts[1]);
 
 //            adds sourceMAC to IP table if not found
-            if (!switchTable.containsKey(src.getID())){
-                switchTable.put(src.getID(), src.getMAC());
-                System.out.println("added " + src.getID() + " to hashmap");
-            }
+                if (!switchTable.containsKey(src.getID())){
+                    switchTable.put(src.getID(), src.getMAC());
+                    System.out.println("added " + src.getID() + " to hashmap");
+                }
 
 //            if the destMAC is known forward to known location
-            if (switchTable.containsKey(dest.getID())){
-                System.out.println("destMac Known. forwarding packet...");
-                byte[] response = frame.getBytes();
-                DatagramPacket forwardPacket = new DatagramPacket(response, response.length, dest.getIP(), dest.getPort());
-                socket.send(forwardPacket);
-                System.out.println("packet forwarded to: "+ dest.getID() + ":" + dest.getMAC());
+                if (switchTable.containsKey(dest.getID())){
+                    System.out.println("destMac Known. forwarding packet...");
+                    byte[] response = frame.getBytes();
+                    DatagramPacket forwardPacket = new DatagramPacket(response, response.length, dest.getIP(), dest.getPort());
+                    socket.send(forwardPacket);
+                    System.out.println("packet forwarded to: "+ dest.getID() + ":" + dest.getMAC());
 
-            } else {
-                // Flooding
-                System.out.println("destIP not known starting flood...");
-                for (int i = 0; i < srcNeighbors.length; i++) {
-                    Parser newNeighborParser = new Parser(srcNeighbors[i]);
-                    String[] frameRequestMAC = new String[2];
-                    frameRequestMAC[0] = frameRequest.getAddress().toString();
-                    frameRequestMAC[1] = Integer.toString(frameRequest.getPort());
-                    // check to stop sending back to source
-                    if (!Arrays.equals(newNeighborParser.getMAC(), frameRequestMAC)){
-                        DatagramPacket flooder = new DatagramPacket(frame.getBytes(), frame.length(), newNeighborParser.getIP(), newNeighborParser.getPort());
-                        socket.send(flooder);
-                        System.out.println("Sent flood packet to: "+ newNeighborParser.getID() +":"+ Arrays.toString(newNeighborParser.getMAC()));
-                    }
-                    // this is probably unnecessary
-                    if (i == srcNeighbors.length - 1) {
-                        break;
-                    }
-                } // not broken in the for loop
+                } else {
+                    // Flooding
+                    System.out.println("destIP not known starting flood...");
+                    for (int i = 0; i < srcNeighbors.length; i++) {
+                        Parser newNeighborParser = new Parser(srcNeighbors[i]);
+                        String[] frameRequestMAC = new String[2];
+                        frameRequestMAC[0] = frameRequest.getAddress().toString();
+                        frameRequestMAC[1] = Integer.toString(frameRequest.getPort());
+                        // check to stop sending back to source
+                        if (((newNeighborParser.getIP() != frameRequest.getAddress()) && (newNeighborParser.getPort() != frameRequest.getPort())) &&
+                                ((newNeighborParser.getIP() != src.getIP()) && (newNeighborParser.getPort() != src.getPort()))) {// (!Arrays.equals(newNeighborParser.getMAC(), frameRequestMAC)) {
+                            DatagramPacket flooder = new DatagramPacket(frame.getBytes(), frame.length(), newNeighborParser.getIP(), newNeighborParser.getPort());
+                            socket.send(flooder);
+                            System.out.println("Sent flood packet to: " + newNeighborParser.getID() + ":" + Arrays.toString(newNeighborParser.getMAC()));
+                        }
+                        // this is probably unnecessary
+                        if (i == srcNeighbors.length - 1) {
+                            break;
+                        }
+                    } // not broken in the for loop
 
-                System.out.println("Flooding finished");
-                socket.close();
+                    System.out.println("Flooding finished");
+                    socket.close();
+                }
             }
+        } catch (SocketException e) {
+            e.printStackTrace();
         }
     }
 }
