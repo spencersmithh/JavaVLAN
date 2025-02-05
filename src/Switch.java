@@ -50,7 +50,7 @@ public class Switch {
                 byte[] response = frame.getBytes();
                 DatagramPacket forwardPacket = new DatagramPacket(response, response.length, dest.getIP(), dest.getPort());
                 socket.send(forwardPacket);
-                System.out.println("packet forwarded to: "+ dest.getID() + ":" + Arrays.toString(dest.getMAC()));
+                System.out.println("packet forwarded to: "+ dest.getID() + ":" + dest.getMAC());
 
             } else {
                 // Flooding

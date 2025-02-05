@@ -64,11 +64,11 @@ public class Host{
 
                 while (true) {
                     Scanner keyInput = new Scanner(System.in);
-                    System.out.println("Enter the destMAC (IP and port number) and message separated by a space");
+                    System.out.println("To send a message, enter the destMAC(device name) and message separated by a space");
                     String userRequest = keyInput.nextLine();
 
-                    destinationMac = userRequest.split(" ",3)[0];
-                    message = userRequest.split(" ",3)[1];
+                    destinationMac = userRequest.split(" ",2)[0];
+                    message = userRequest.split(" ",2)[1];
                     String frameMessage = name +";"+ destinationMac + ";" + message;
 
                     byte[] frameBytes = convertStringToBytes(frameMessage);
@@ -125,7 +125,3 @@ public class Host{
         return s;
     }
 }
-
-// TODO: test if the destination MAC matches the current host MAC.
-//      if it does, print out the message.
-//      if it doesn't, ignore.
