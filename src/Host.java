@@ -59,7 +59,7 @@ public class Host{
         static class send implements Runnable {
             @Override
             public void run() {
-                String[] destinationMac = new String[2];
+                String destinationMac;
                 String message = "";
 
                 while (true) {
@@ -67,10 +67,9 @@ public class Host{
                     System.out.println("Enter the destMAC (IP and port number) and message separated by a space");
                     String userRequest = keyInput.nextLine();
 
-                    destinationMac[0] = userRequest.split(" ",3)[0];
-                    destinationMac[1] = userRequest.split(" ",3)[1];
-                    message = userRequest.split(" ",3)[2];
-                    String frameMessage = Arrays.toString(mac) +";"+ destinationMac[0] + "," + destinationMac[1] + ";" + message;
+                    destinationMac = userRequest.split(" ",3)[0];
+                    message = userRequest.split(" ",3)[1];
+                    String frameMessage = name +";"+ destinationMac + ";" + message;
 
                     byte[] frameBytes = convertStringToBytes(frameMessage);
                     Parser neighbor = getNeighborParser();
@@ -85,18 +84,20 @@ public class Host{
                         e.printStackTrace();
                     }
 
-                    System.out.println("The host named " + name + " has send a message to a device with the following MAC address: " + Arrays.toString(destinationMac));
+                    System.out.println("The host named " + name + " has send a message to a device with the following MAC address: " + destinationMac);
                 }
             }
         }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SocketException, UnknownHostException {
         // START OF USER INPUT AND DEFINING VARIABLES
-
         if (args[0].isEmpty()){
             System.out.println("hostname/arguments not given in run configuration...");
             System.exit(1);
         }
+        Host host = new Host(args[0]);
+        System.out.println(name);
+
         ExecutorService es = Executors.newFixedThreadPool(2);
         Runnable threadListen = new listen();
         Runnable threadSend = new send();

@@ -1,6 +1,7 @@
 import java.net.InetAddress;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class Switch {
@@ -49,7 +50,7 @@ public class Switch {
                 byte[] response = frame.getBytes();
                 DatagramPacket forwardPacket = new DatagramPacket(response, response.length, dest.getIP(), dest.getPort());
                 socket.send(forwardPacket);
-                System.out.println("packet forwarded to: "+ dest.getID() + ":" + dest.getMAC());
+                System.out.println("packet forwarded to: "+ dest.getID() + ":" + Arrays.toString(dest.getMAC()));
 
             } else {
                 // Flooding
@@ -59,10 +60,10 @@ public class Switch {
                     Parser newNeighborParser = new Parser(neighbor);
 
                     // check to stop sending back to source
-                    if (!newNeighborParser.getMAC().equals(src.getMAC())){
+                    if (!Arrays.equals(newNeighborParser.getMAC(), src.getMAC())){
                         DatagramPacket flooder = new DatagramPacket(frame.getBytes(), frame.length(), newNeighborParser.getIP(), newNeighborParser.getPort());
                         socket.send(flooder);
-                        System.out.println("Sent flood packet to: "+ newNeighborParser.getID() +":"+ newNeighborParser.getMAC());
+                        System.out.println("Sent flood packet to: "+ newNeighborParser.getID() +":"+ Arrays.toString(newNeighborParser.getMAC()));
                     }
                 }
                 System.out.println("Flooding finished");
