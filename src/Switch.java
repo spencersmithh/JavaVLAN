@@ -55,10 +55,8 @@ public class Switch {
             } else {
                 // Flooding
                 System.out.println("destIP not known starting flood...");
-                for (String neighbor : srcNeighbors){
-                    // creates a parser for each neighbor
-                    Parser newNeighborParser = new Parser(neighbor);
-
+                for (int i = 0; i < srcNeighbors.length; i++) {
+                    Parser newNeighborParser = new Parser(srcNeighbors[i]);
                     String[] frameRequestMAC = new String[2];
                     frameRequestMAC[0] = frameRequest.getAddress().toString();
                     frameRequestMAC[1] = Integer.toString(frameRequest.getPort());
@@ -68,7 +66,11 @@ public class Switch {
                         socket.send(flooder);
                         System.out.println("Sent flood packet to: "+ newNeighborParser.getID() +":"+ Arrays.toString(newNeighborParser.getMAC()));
                     }
+                    if (i == srcNeighbors.length - 1) {
+                        break;
+                    }
                 }
+
                 System.out.println("Flooding finished");
             }
         }
