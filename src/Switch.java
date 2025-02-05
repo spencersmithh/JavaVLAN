@@ -16,14 +16,13 @@ public class Switch {
 
         String[] srcNeighbors = parser.getNeighbors();
 
-        // create the switch table. format = {"macName":"IP:Port"}
-            // we are not using the table values only using it for name lookups, maybe replace? or just keep for fast lookup
+        // switch table format = {"macName":"IP:Port"}
         HashMap<String, String[]> switchTable = new HashMap<>();
 
-        DatagramSocket socket = new DatagramSocket(parser.getPort());
-        DatagramPacket frameRequest = new DatagramPacket(new byte[1024], 1024);
-
         while (true) {
+            DatagramSocket socket = new DatagramSocket(parser.getPort());
+            DatagramPacket frameRequest = new DatagramPacket(new byte[1024], 1024);
+
             socket.receive(frameRequest);
             String frame = new String(frameRequest.getData(),0, frameRequest.getLength());
             System.out.println("Frame received: " + frame);
@@ -66,12 +65,14 @@ public class Switch {
                         socket.send(flooder);
                         System.out.println("Sent flood packet to: "+ newNeighborParser.getID() +":"+ Arrays.toString(newNeighborParser.getMAC()));
                     }
+                    // this is probably unnecessary
                     if (i == srcNeighbors.length - 1) {
                         break;
                     }
-                }
+                } // not broken in the for loop
 
                 System.out.println("Flooding finished");
+                socket.close();
             }
         }
     }
