@@ -41,9 +41,7 @@ public class Switch {
 //            adds sourceMAC to IP table if not found
             if (!switchTable.containsKey(src.getID())){
                 switchTable.put(src.getID(), fromID);
-                System.out.println("added " + src.getID() + fromID + " to hashmap");
-                System.out.println(src.getID());
-                System.out.println(fromID);
+                System.out.println("added " + src.getID() + " " + fromID + " to hashmap");
             }
 
 //            if the destMAC is known forward to known location
