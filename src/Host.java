@@ -3,6 +3,7 @@ import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,6 +18,8 @@ public class Host{
     private static DatagramSocket socket;
     private volatile boolean running = true;
 
+    private static String router;
+
     public Host(String name) throws UnknownHostException, SocketException {
         this.name = name;
         Parser parser = new Parser(name);
@@ -25,6 +28,8 @@ public class Host{
         ip = parser.getIP();
         mac = parser.getMAC();
         socket = new DatagramSocket(port);
+        // maybe something like this?
+        router = parser.getRouterName();
 
         neighbors = parser.getNeighbors();
     }
@@ -63,21 +68,41 @@ public class Host{
                 String message = "";
 
                 while (true) {
+                    // user input
                     Scanner keyInput = new Scanner(System.in);
                     System.out.println("To send a message, enter the destMAC(device name) and message separated by a space");
                     String userRequest = keyInput.nextLine();
 
+                    // split user packet request
                     destinationMac = userRequest.split(" ",2)[0];
                     message = userRequest.split(" ",2)[1];
-                    String frameMessage = name +";"+ destinationMac + ";" + message;
 
-                    byte[] frameBytes = convertStringToBytes(frameMessage);
+                    // get first neighbor, most likely a switch
                     Parser neighbor = getNeighborParser();
 
                     // START OF UDP IMPLEMENTATION
 
+                    // NOTE
+                    // need to make the frameMessage longer, as explained on the project2 pdf
+                    String frameMessage = "";
+
                     DatagramPacket request = null;
+                    // NOTE
+                    // need to wrap packet
                     try {
+                        if (Objects.equals(destinationMac.split(".")[0], name.split(".")[0])){
+                            // if in same subnet
+                            // NOTE
+                            // need to make the frameMessage longer, as explained on the project2 pdf
+                            frameMessage = name +";"+ destinationMac + ";" + message;
+                        } else {
+                            // if not in same subnet, send to router
+                            // NOTE
+                            // need to make the frameMessage longer, as explained on the project2 pdf
+                            // changes the inner packet but is still sent to the switch via neighbor bellow vvv
+                            frameMessage = name +";"+ router + ";" + message;
+                        }
+                        byte[] frameBytes = convertStringToBytes(frameMessage);
                         request = new DatagramPacket(frameBytes, frameBytes.length, neighbor.getIP(), neighbor.getPort());
                         socket.send(request);
                     } catch (IOException e) {

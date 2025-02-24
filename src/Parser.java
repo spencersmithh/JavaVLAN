@@ -5,6 +5,9 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Properties;
 
+// NOTE
+// a getRouter function would help a lot in this, given the net(#) return the router...
+
 public class Parser {
     private final String name;
     private final Properties properties = new Properties();
@@ -50,5 +53,11 @@ public class Parser {
 
     public Integer getPort(){
         return Integer.parseInt(getMAC()[1]);
+    }
+
+    public String getRouterName() {
+        // NOTE needs work and testing, should return the name of router, we will prob want a router class
+        String routerOptions = properties.getProperty(name.split(".")[0] + "R");
+        return routerOptions;
     }
 }
