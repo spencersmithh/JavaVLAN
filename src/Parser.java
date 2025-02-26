@@ -5,9 +5,6 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Properties;
 
-// NOTE
-// a getRouter function would help a lot in this, given the net(#) return the router...
-
 public class Parser {
     private final String name;
     private final Properties properties = new Properties();
@@ -27,12 +24,20 @@ public class Parser {
         }
     }
 
-    public String[] getMAC() {
+    public String[] getNetInfo() {
         String rawMac = properties.getProperty(name);
         if (rawMac == null) {
             throw new IllegalArgumentException("No entry found for " + name + " in config.properties");
         }
         return rawMac.split(",");
+    }
+
+    public InetAddress getIP() throws UnknownHostException {
+        return InetAddress.getByName(getNetInfo()[0]);
+    }
+
+    public Integer getPort(){
+        return Integer.parseInt(getNetInfo()[1]);
     }
 
     public String[] getNeighbors() {
@@ -47,17 +52,28 @@ public class Parser {
         return name;
     }
 
-    public InetAddress getIP() throws UnknownHostException {
-        return InetAddress.getByName(getMAC()[0]);
+    public String getVirtualIP(){
+        return getNetInfo()[2];
     }
 
-    public Integer getPort(){
-        return Integer.parseInt(getMAC()[1]);
+    public String getSubnet(){
+        return getVirtualIP().split(",")[0];
     }
 
     public String getRouterName() {
-        // NOTE needs work and testing, should return the name of router, we will prob want a router class
-        String routerOptions = properties.getProperty(name.split(".")[0] + "R");
-        return routerOptions;
+        return getNetInfo()[3];
+    }
+
+    public String[] getRouterNetInfo(){
+        String info = properties.getProperty(getRouterName());
+        return info.split(",");
+    }
+
+    public InetAddress getRouterIP() throws UnknownHostException {
+        return InetAddress.getByName(getRouterNetInfo()[0]);
+    }
+
+    public int getRouterPort(){
+        return Integer.parseInt(getRouterNetInfo()[1]);
     }
 }
