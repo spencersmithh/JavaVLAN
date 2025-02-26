@@ -10,9 +10,8 @@ import java.util.concurrent.Executors;
 
 public class Host{
     private static String name;
-    private static String id;
     private static int port;
-    private static InetAddress ip;
+    private static String ip;
     private static String[] mac;
     private static String[] neighbors;
     private static DatagramSocket socket;
@@ -20,99 +19,96 @@ public class Host{
 
     private static String router;
 
-    public Host(String name) throws UnknownHostException, SocketException {
-        this.name = name;
+    public Host(String[] args) throws UnknownHostException, SocketException {
+        this.name = args[0];
         Parser parser = new Parser(name);
-        id = parser.getID();
         port = parser.getPort();
-        ip = parser.getIP();
+        ip = args[1];
         mac = parser.getMAC();
         socket = new DatagramSocket(port);
+
         // maybe something like this?
         router = parser.getRouterName();
 
         neighbors = parser.getNeighbors();
     }
 
-        static class listen implements Runnable {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        byte[] buffer = new byte[1024];
-                        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                        socket.receive(packet);
+    static class listen implements Runnable {
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    byte[] buffer = new byte[1024];
+                    DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                    socket.receive(packet);
 
-                        String inputFrame = new String(packet.getData(), 0, packet.getLength());
+                    String inputFrame = new String(packet.getData(), 0, packet.getLength());
 
-                        // Parse frame
-                        String[] frameParts = inputFrame.split(";");
-                        if (frameParts.length < 3) {
-                            System.out.println("Frame has incorrect length");
-                            continue;
-                        }
-
-                        System.out.println("Incoming Packet: ");
-                        System.out.println(Arrays.toString(frameParts));
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                    // Parse frame
+                    String[] frameParts = inputFrame.split(";");
+                    if (frameParts.length < 3) {
+                        System.out.println("Frame has incorrect length");
+                        continue;
                     }
+
+                    System.out.println("Incoming Packet: ");
+                    System.out.println(Arrays.toString(frameParts));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             }
         }
+    }
 
-        static class send implements Runnable {
-            @Override
-            public void run() {
-                String destinationMac;
-                String message = "";
+    static class send implements Runnable {
+        @Override
+        public void run() {
+            String destinationIp;
+            String message = "";
 
-                while (true) {
-                    // user input
-                    Scanner keyInput = new Scanner(System.in);
-                    System.out.println("To send a message, enter the destMAC(device name) and message separated by a space");
-                    String userRequest = keyInput.nextLine();
+            while (true) {
+                Scanner keyInput = new Scanner(System.in);
+                System.out.println("To send a message, enter the destIP(ex. Net1.A) and message separated by a space");
+                String userRequest = keyInput.nextLine();
 
-                    // split user packet request
-                    destinationMac = userRequest.split(" ",2)[0];
-                    message = userRequest.split(" ",2)[1];
+                destinationIp = userRequest.split(" ",2)[0];
+                message = userRequest.split(" ",2)[1];
 
-                    // get first neighbor, most likely a switch
-                    Parser neighbor = getNeighborParser();
+                Parser neighbor = getNeighborParser();
 
-                    // START OF UDP IMPLEMENTATION
+                // START OF UDP IMPLEMENTATION
 
-                    // NOTE
-                    // need to make the frameMessage longer, as explained on the project2 pdf
-                    String frameMessage = "";
+                String frameMessage = "";
+                frameMessage = name +";"+ destinationIp + ";" + message;
 
-                    DatagramPacket request = null;
-                    // NOTE
-                    // need to wrap packet
-                    try {
-                        if (Objects.equals(destinationMac.split(".")[0], name.split(".")[0])){
-                            // if in same subnet
-                            // NOTE
-                            // need to make the frameMessage longer, as explained on the project2 pdf
-                            frameMessage = name +";"+ destinationMac + ";" + message;
-                        } else {
-                            // if not in same subnet, send to router
-                            // NOTE
-                            // need to make the frameMessage longer, as explained on the project2 pdf
-                            // changes the inner packet but is still sent to the switch via neighbor bellow vvv
-                            frameMessage = name +";"+ router + ";" + message;
-                        }
-                        byte[] frameBytes = convertStringToBytes(frameMessage);
-                        request = new DatagramPacket(frameBytes, frameBytes.length, neighbor.getIP(), neighbor.getPort());
-                        socket.send(request);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+
+                DatagramPacket request = null;
+                // NOTE
+                // need to wrap packet
+                try {
+                    if (Objects.equals(destinationIp.split(".")[0], name.split(".")[0])){
+                        // if in same subnet
+                        // NOTE
+                        // need to make the frameMessage longer, as explained on the project2 pdf
+                        frameMessage = name +";"+ destinationIp + ";" + message;
+                    } else {
+                        // if not in same subnet, send to router
+                        // NOTE
+                        // need to make the frameMessage longer, as explained on the project2 pdf
+                        // changes the inner packet but is still sent to the switch via neighbor bellow vvv
+                        frameMessage = name +";"+ router + ";" + message;
                     }
-
-                    System.out.println("The host named " + name + " has send a message to a device with the following MAC address: " + destinationMac);
+                    byte[] frameBytes = convertStringToBytes(frameMessage);
+                    request = new DatagramPacket(frameBytes, frameBytes.length, neighbor.getIP(), neighbor.getPort());
+                    socket.send(request);
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
+
+                System.out.println("The host named " + name + " has send a message to a device with the following MAC address: " + destinationIp);
             }
         }
+    }
 
     public static void main(String[] args) throws SocketException, UnknownHostException {
         // START OF USER INPUT AND DEFINING VARIABLES
@@ -120,7 +116,7 @@ public class Host{
             System.out.println("hostname/arguments not given in run configuration...");
             System.exit(1);
         }
-        Host host = new Host(args[0]);
+        Host host = new Host(args);
         System.out.println(name);
 
         ExecutorService es = Executors.newFixedThreadPool(2);
