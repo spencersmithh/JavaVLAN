@@ -37,7 +37,7 @@ public class Parser {
 
     public String[] getNeighbors() {
         String rawConnections;
-        if (name.contains("\\.")) {
+        if (name.contains(".")) {
             String routerName = getVirtualIP().split("\\.")[1];
             rawConnections = properties.getProperty(routerName + "conn");
         } else {
