@@ -12,19 +12,18 @@ public class Host{
     private static String name;
     private static int port;
     private static String ip;
-    private static String[] mac;
     private static String[] neighbors;
     private static DatagramSocket socket;
     private volatile boolean running = true;
 
     private static String router;
+    private static String net;
 
     public Host(String[] args) throws UnknownHostException, SocketException {
-        this.name = args[0];
+        name = args[0];
         Parser parser = new Parser(name);
         port = parser.getPort();
-        ip = args[1];
-        mac = parser.getMAC();
+        ip = parser.getVirtualIP();
         socket = new DatagramSocket(port);
 
         // maybe something like this?
@@ -77,8 +76,8 @@ public class Host{
                 Parser neighbor = getNeighborParser();
 
                 // START OF UDP IMPLEMENTATION
-
                 String frameMessage = "";
+
                 frameMessage = name +";"+ destinationIp + ";" + message;
 
 
@@ -125,10 +124,6 @@ public class Host{
         es.submit(threadListen);
         es.submit(threadSend);
 
-    }
-
-    public Object[] getMac() {
-        return mac;
     }
     private DatagramSocket getSocket() {
         return socket;

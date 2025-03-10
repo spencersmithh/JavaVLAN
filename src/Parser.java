@@ -57,7 +57,7 @@ public class Parser {
     }
 
     public String getSubnet(){
-        return getVirtualIP().split(",")[0];
+        return getVirtualIP().split("\\.")[0];
     }
 
     public String getRouterName() {
