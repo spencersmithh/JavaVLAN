@@ -59,7 +59,7 @@ public class Switch {
             } else {
                 // Flooding
                 System.out.println("destIP not known starting flood...");
-                for (String neighbor : srcNeighbors){
+                for (String neighbor : srcNeighbors) {
                     // creates a parser for each neighbor
                     Parser newNeighborParser = new Parser(neighbor);
 

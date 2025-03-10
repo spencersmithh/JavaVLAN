@@ -62,7 +62,7 @@ public class Host{
     static class send implements Runnable {
         @Override
         public void run() {
-            String destinationIp;
+            String destinationVirtualIp;
             String message = "";
 
             while (true) {
@@ -70,7 +70,7 @@ public class Host{
                 System.out.println("To send a message, enter the destIP(ex. Net1.A) and message separated by a space");
                 String userRequest = keyInput.nextLine();
 
-                destinationIp = userRequest.split(" ",2)[0];
+                destinationVirtualIp = userRequest.split(" ",2)[0];
                 message = userRequest.split(" ",2)[1];
 
                 Parser neighbor = getNeighborParser();
@@ -78,24 +78,22 @@ public class Host{
                 // START OF UDP IMPLEMENTATION
                 String frameMessage = "";
 
-                frameMessage = name +";"+ destinationIp + ";" + message;
-
                 DatagramPacket request = null;
                 // NOTE
                 // need to wrap packet
                 try {
-                    if ((destinationIp.split("\\.")[0].equals(ip.split("\\.")[0]) )){
+                    if ((destinationVirtualIp.split("\\.")[0].equals(ip.split("\\.")[0]) )){
                         // if in same subnet
                         // NOTE
                         // need to make the frameMessage longer, as explained on the project2 pdf
-                        frameMessage = name +";"+ destinationIp.split("\\.")[1] + ";" + message;
+                        frameMessage = name +";"+ destinationVirtualIp.split("\\.")[1] + ";" + message;
                         System.out.println(frameMessage);
                     } else {
                         // if not in same subnet, send to router
                         // NOTE
                         // need to make the frameMessage longer, as explained on the project2 pdf
                         // changes the inner packet but is still sent to the switch via neighbor bellow vvv
-                        frameMessage = name +";"+ router + ";" + ip + ";" + destinationIp + ";" + message;
+                        frameMessage = name +";"+ router + ";" + ip + ";" + destinationVirtualIp + ";" + message;
                         System.out.println(frameMessage);
                     }
                     byte[] frameBytes = convertStringToBytes(frameMessage);
@@ -105,7 +103,7 @@ public class Host{
                     e.printStackTrace();
                 }
 
-                System.out.println("The host named " + name + " has send a message to a device with the following MAC address: " + destinationIp);
+                System.out.println("The host named " + name + " has send a message to a device with the following MAC address: " + destinationVirtualIp);
             }
         }
     }

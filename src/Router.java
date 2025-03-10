@@ -27,6 +27,7 @@ public class Router {
                 socket.receive(frameRequest);
                 String frame = new String(frameRequest.getData(), 0, frameRequest.getLength());
                 System.out.println("Frame received: " + frame);
+                int srcPort = frameRequest.getPort();
 
                 // Parse frame
                 String[] frameParts = frame.split(";");
@@ -36,7 +37,7 @@ public class Router {
                 }
 
                 Parser src = new Parser(frameParts[0]);
-                Parser dest = new Parser(frameParts[1]);
+                // Parser dest = new Parser(frameParts[1]);
 
                 // re-create the frame based on the router configurations
 
