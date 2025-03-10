@@ -14,7 +14,10 @@ public class Host{
     private static String ip;
     private static String[] neighbors;
     private static DatagramSocket socket;
+    private volatile boolean running = true;
+
     private static String router;
+    private static String net;
 
     public Host(String[] args) throws UnknownHostException, SocketException {
         name = args[0];
@@ -77,22 +80,23 @@ public class Host{
 
                 frameMessage = name +";"+ destinationIp + ";" + message;
 
-
                 DatagramPacket request = null;
                 // NOTE
                 // need to wrap packet
                 try {
-                    if (Objects.equals(destinationIp.split(".")[0], name.split(".")[0])){
+                    if ((destinationIp.split("\\.")[0].equals(ip.split("\\.")[0]) )){
                         // if in same subnet
                         // NOTE
                         // need to make the frameMessage longer, as explained on the project2 pdf
-                        frameMessage = name +";"+ destinationIp + ";" + message;
+                        frameMessage = name +";"+ destinationIp.split("\\.")[1] + ";" + message;
+                        System.out.println(frameMessage);
                     } else {
                         // if not in same subnet, send to router
                         // NOTE
                         // need to make the frameMessage longer, as explained on the project2 pdf
                         // changes the inner packet but is still sent to the switch via neighbor bellow vvv
-                        frameMessage = name +";"+ router + ";" + message;
+                        frameMessage = name +";"+ router + ";" + ip + ";" + destinationIp + ";" + message;
+                        System.out.println(frameMessage);
                     }
                     byte[] frameBytes = convertStringToBytes(frameMessage);
                     request = new DatagramPacket(frameBytes, frameBytes.length, neighbor.getIP(), neighbor.getPort());
