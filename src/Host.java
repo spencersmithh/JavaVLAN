@@ -14,10 +14,7 @@ public class Host{
     private static String ip;
     private static String[] neighbors;
     private static DatagramSocket socket;
-    private volatile boolean running = true;
-
     private static String router;
-    private static String net;
 
     public Host(String[] args) throws UnknownHostException, SocketException {
         name = args[0];

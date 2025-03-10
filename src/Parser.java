@@ -14,11 +14,6 @@ public class Parser {
 
         try (FileInputStream fis = new FileInputStream("src/config.properties")) {
             properties.load(fis);
-            /*
-            Not exactly sure what the following two lines actually do...
-            String switch1ID=properties.getProperty("switch1");
-            System.out.println(switch1ID);
-            */
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -41,7 +36,13 @@ public class Parser {
     }
 
     public String[] getNeighbors() {
-        String rawConnections = properties.getProperty(name + "conn");
+        String rawConnections;
+        if (name.contains("\\.")) {
+            String routerName = getVirtualIP().split("\\.")[1];
+            rawConnections = properties.getProperty(routerName + "conn");
+        } else {
+            rawConnections = properties.getProperty(name + "conn");
+        }
         if (rawConnections == null) {
             throw new IllegalArgumentException("No connection entries found for " + name + " in config.properties");
         }
