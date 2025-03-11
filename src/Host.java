@@ -47,8 +47,7 @@ public class Host{
                         continue;
                     }
 
-                    System.out.println("Incoming Packet: ");
-                    System.out.println(Arrays.toString(frameParts));
+                    System.out.println("Incoming Packet: " + Arrays.toString(frameParts));
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }

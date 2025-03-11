@@ -55,7 +55,7 @@ public class Switch {
 
 //            if the destMAC is known forward to known location
             if (switchTable.containsKey(dest.getID())){
-                System.out.println("destMac Known. forwarding packet...");
+//                System.out.println("destMac Known. forwarding packet...");
                 byte[] response = frame.getBytes();
 
                 InetAddress toAddress = InetAddress.getByName(switchTable.get(dest.getID()).split(";")[0]);
@@ -63,14 +63,13 @@ public class Switch {
 
                 DatagramPacket forwardPacket = new DatagramPacket(response, response.length, toAddress, toPort);
                 socket.send(forwardPacket);
-                System.out.println("packet forwarded to: "+ dest.getID() + ":" + switchTable.get(dest.getID()));
+                System.out.println("destMac Known. packet forwarded to: "+ dest.getID() + ":" + switchTable.get(dest.getID()));
 
             } else {
                 // Flooding
                 System.out.println("destIP not known starting flood...");
                 for (String neighbor : srcNeighbors) {
                     if (neighbor.contains("R")){
-                        System.out.println("trying to flood to router, stopped");
                         continue;
                     }
                     // creates a parser for each neighbor
