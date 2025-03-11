@@ -31,7 +31,7 @@ public class Parser {
         return InetAddress.getByName(getNetInfo()[0]);
     }
 
-    public Integer getPort(){
+    public Integer getPort() {
         return Integer.parseInt(getNetInfo()[1]);
     }
 
@@ -53,36 +53,11 @@ public class Parser {
         return name;
     }
 
-    public String getVirtualIP(){
+    public String getVirtualIP() {
         return getNetInfo()[2];
-    }
-
-    public String getSubnet(){
-        return getVirtualIP().split("\\.")[0];
     }
 
     public String getRouterName() {
         return getNetInfo()[3];
-    }
-
-    public String[] getRouterNetInfo(){
-        String info = properties.getProperty(getRouterName());
-        return info.split(",");
-    }
-
-    public String getRouterVirtualIP(String side) {
-        if (side.equals("L")) {
-            return getRouterNetInfo()[0];
-        } else {
-            return getRouterNetInfo()[1];
-        }
-    }
-
-    public InetAddress getRouterIP() throws UnknownHostException {
-        return InetAddress.getByName(getRouterNetInfo()[0]);
-    }
-
-    public int getRouterPort(){
-        return Integer.parseInt(getRouterNetInfo()[1]);
     }
 }

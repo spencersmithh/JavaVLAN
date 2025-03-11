@@ -36,6 +36,14 @@ public class Router {
     public static class portProcess implements Runnable {
         private String side;
 
+        public String swapSide(String side){
+            if (side.equals("R")){
+                return "L";
+            }else {
+                return "R";
+            }
+        }
+
         public portProcess(String side) {
             this.side = side;
         }
@@ -88,25 +96,23 @@ public class Router {
                         }
 
                         String destMAC;
-                        String virtIP = parser.getRouterVirtualIP(side);
-                        // hard coded the src mac name vvvvv
+                        side = swapSide(side);
                         if (routerID.equals("R1")) {
                             destMAC = R1Table.get(net)[0];
                             if (R1Table.get(net)[1].equals("yes")) {
-                                newFrame = virtIP + ";" + frameParts[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+                                newFrame = "net1.R1" + ";" + frameParts[3].split("\\.")[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
                                 System.out.println(side + " directly connected, created frame: " + newFrame);
                             } else {
-                                newFrame = virtIP + ";" + R1Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+                                newFrame = "net2.R1" + ";" + R1Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
                                 System.out.println(side + " in-directly connected, created frame: " + newFrame);
                             }
-
                         } else {
                             destMAC = R2Table.get(net)[0];
                             if (R2Table.get(net)[1].equals("yes")) {
-                                newFrame = virtIP + ";" + frameParts[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+                                newFrame = "net3.R2" + ";" + frameParts[3].split("\\.")[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
                                 System.out.println(side + " directly connected, created frame: " + newFrame);
                             } else {
-                                newFrame = virtIP + ";" + R2Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+                                newFrame = "net2.R2" + ";" + R2Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
                                 System.out.println(side + " in-directly connected, created frame: " + newFrame);
                             }
                         }
@@ -118,12 +124,12 @@ public class Router {
                         socket.close();
 
                     } catch (Exception e){
-                        System.out.println("BRO WHAT AND WHY");
-                        System.out.println(e);
+                        e.printStackTrace();
                     }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
+                side = swapSide(side);
             }
         }
     }

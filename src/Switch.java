@@ -69,6 +69,10 @@ public class Switch {
                 // Flooding
                 System.out.println("destIP not known starting flood...");
                 for (String neighbor : srcNeighbors) {
+                    if (neighbor.contains("R")){
+                        System.out.println("trying to flood to router, stopped");
+                        continue;
+                    }
                     // creates a parser for each neighbor
                     Parser newNeighborParser = new Parser(neighbor);
 
