@@ -43,7 +43,7 @@ public class Router {
         public void run() {
             while (true) {
                 try {
-                    System.out.println("starting runnable side: " + side +" at port: " + getPortSide(side));
+                    System.out.println("listening side: " + side +" at port: " + getPortSide(side));
                     DatagramSocket socket = new DatagramSocket(getPortSide(side));
                     DatagramPacket frameRequest = new DatagramPacket(new byte[1024], 1024);
 
@@ -61,6 +61,7 @@ public class Router {
                         }else{
                             System.out.println(side + " Frame has incorrect length");
                         }
+                        socket.close();
                         continue;
                     }
 
@@ -76,44 +77,47 @@ public class Router {
                     R2Table.put("net3", new String[]{"S2" , "yes"});
 
                     try {
-                        while (true) {
-                            String newFrame;
-                            String net = frameParts[3].split("\\.")[0];
+                        // this was in a while loop for why?????????
 
-                            if (!R1Table.containsKey(net) || !R2Table.containsKey(net)) {
-                                System.out.println("There should always be a key in the table...");
-                                System.exit(1);
-                            }
+                        String newFrame;
+                        String net = frameParts[3].split("\\.")[0];
 
-                            String destMAC;
-                            if (routerID.equals("R1")) {
-                                destMAC = R1Table.get(net)[0];
-                                if (R1Table.get(net)[1].equals("yes")) {
-                                    newFrame = parser.getID() + ";" + frameParts[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
-                                    System.out.println(side + " directly connected, created frame: " + newFrame);
-                                } else {
-                                    newFrame = parser.getID() + ";" + R1Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
-                                    System.out.println(side + " in-directly connected, created frame: " + newFrame);
-                                }
-
-                            } else {
-                                destMAC = R2Table.get(net)[0];
-                                if (R2Table.get(net)[1].equals("yes")) {
-                                    newFrame = parser.getID() + ";" + frameParts[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
-                                    System.out.println(side + " directly connected, created frame: " + newFrame);
-                                } else {
-                                    newFrame = parser.getID() + ";" + R2Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
-                                    System.out.println(side + " in-directly connected, created frame: " + newFrame);
-                                }
-                            }
-
-                            System.out.println(side + " sending out final packet: " + newFrame);
-                            Parser destMacParser = new Parser(destMAC);
-                            DatagramPacket finalPacket = new DatagramPacket(newFrame.getBytes(), newFrame.length(), destMacParser.getIP(), destMacParser.getPort());
-                            socket.send(finalPacket);
-                            socket.close();
+                        if (!R1Table.containsKey(net) || !R2Table.containsKey(net)) {
+                            System.out.println("There should always be a key in the table...");
+                            System.exit(1);
                         }
+
+                        String destMAC;
+                        // hard coded the src mac name vvvvv
+                        if (routerID.equals("R1")) {
+                            destMAC = R1Table.get(net)[0];
+                            if (R1Table.get(net)[1].equals("yes")) {
+                                newFrame = "net1.R1" + ";" + frameParts[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+                                System.out.println(side + " directly connected, created frame: " + newFrame);
+                            } else {
+                                newFrame = "net1.R1" + ";" + R1Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+                                System.out.println(side + " in-directly connected, created frame: " + newFrame);
+                            }
+
+                        } else {
+                            destMAC = R2Table.get(net)[0];
+                            if (R2Table.get(net)[1].equals("yes")) {
+                                newFrame = "net3.R2" + ";" + frameParts[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+                                System.out.println(side + " directly connected, created frame: " + newFrame);
+                            } else {
+                                newFrame = "net3.R2" + ";" + R2Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+                                System.out.println(side + " in-directly connected, created frame: " + newFrame);
+                            }
+                        }
+
+                        System.out.println(side + " sending out final packet: " + newFrame);
+                        Parser destMacParser = new Parser(destMAC);
+                        DatagramPacket finalPacket = new DatagramPacket(newFrame.getBytes(), newFrame.length(), destMacParser.getIP(), destMacParser.getPort());
+                        socket.send(finalPacket);
+                        socket.close();
+
                     } catch (Exception e){
+                        System.out.println("BRO WHAT AND WHY");
                         System.out.println(e);
                     }
                 } catch (IOException e) {

@@ -18,6 +18,15 @@ public class Switch {
 
         // create the switch table. format = {"macName";"IP:Port"}
         HashMap<String, String> switchTable = new HashMap<>();
+        // populate switch table with that subnets router
+        if (args[0].equals("S1")){
+            Parser routerR1 = new Parser("net1.R1");
+            switchTable.put("net1.R1", routerR1.getIP().toString().replace("/","") + ";" + routerR1.getPort());
+        }else{
+            Parser routerR2 = new Parser("net3.R2");
+            switchTable.put("net3.R2",  routerR2.getIP().toString().replace("/","") + ";" + routerR2.getPort() );
+        }
+        System.out.println("populated table with router info");
 
         DatagramSocket socket = new DatagramSocket(parser.getPort());
         DatagramPacket frameRequest = new DatagramPacket(new byte[1024], 1024);
@@ -67,7 +76,7 @@ public class Switch {
                     String neighborID = newNeighborParser.getIP().toString() + ";" + newNeighborParser.getPort();
 
                     if (!fromID.equals(neighborID.replace("/",""))){
-                        System.out.println("successful flood: "+ neighborID.replace("/","") + " " + fromID);
+                        System.out.println("successful flood: "+ neighbor + " " + neighborID.replace("/","") + " " + fromID);
                         DatagramPacket flooder = new DatagramPacket(frame.getBytes(), frame.length(), newNeighborParser.getIP(), newNeighborParser.getPort());
                         socket.send(flooder);
                     }
