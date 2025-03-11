@@ -72,7 +72,7 @@ public class Router {
                     R1Table.put("net3", new String[]{"net2.R2" , "no"});
 
                     HashMap<String, String[]> R2Table = new HashMap<>();
-                    R2Table.put("net1", new String[]{"net1.R1" , "no"});
+                    R2Table.put("net1", new String[]{"net2.R1" , "no"});
                     R2Table.put("net2", new String[]{"net2.R1", "yes"});
                     R2Table.put("net3", new String[]{"S2" , "yes"});
 
