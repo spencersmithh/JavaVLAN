@@ -64,7 +64,7 @@ public class Host{
 
             while (true) {
                 Scanner keyInput = new Scanner(System.in);
-                System.out.println("To send a message, enter the destIP(ex. Net1.A) and message separated by a space");
+                System.out.println("To send a message, enter the destIP(ex. net1.A) and message separated by a space");
                 String userRequest = keyInput.nextLine();
 
                 destinationVirtualIp = userRequest.split(" ",2)[0];
