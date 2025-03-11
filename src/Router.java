@@ -55,8 +55,13 @@ public class Router {
                     // Parse frame
                     String[] frameParts = frame.split(";");
                     if (frameParts.length < 5) {
-                        System.out.println(side + "Frame has incorrect length");
-                        System.exit(1);
+                        if (frameParts.length == 3){
+//                            need a better system for rejecting flood frames, should the router be getting these anyway??
+                            System.out.println(side + " ignoring flood frame: " + frame);
+                        }else{
+                            System.out.println(side + " Frame has incorrect length");
+                        }
+                        continue;
                     }
 
                     //        MAYBE CHANGE THIS LATER
