@@ -88,24 +88,25 @@ public class Router {
                         }
 
                         String destMAC;
+                        String virtIP = parser.getRouterVirtualIP(side);
                         // hard coded the src mac name vvvvv
                         if (routerID.equals("R1")) {
                             destMAC = R1Table.get(net)[0];
                             if (R1Table.get(net)[1].equals("yes")) {
-                                newFrame = "net1.R1" + ";" + frameParts[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+                                newFrame = virtIP + ";" + frameParts[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
                                 System.out.println(side + " directly connected, created frame: " + newFrame);
                             } else {
-                                newFrame = "net1.R1" + ";" + R1Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+                                newFrame = virtIP + ";" + R1Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
                                 System.out.println(side + " in-directly connected, created frame: " + newFrame);
                             }
 
                         } else {
                             destMAC = R2Table.get(net)[0];
                             if (R2Table.get(net)[1].equals("yes")) {
-                                newFrame = "net3.R2" + ";" + frameParts[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+                                newFrame = virtIP + ";" + frameParts[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
                                 System.out.println(side + " directly connected, created frame: " + newFrame);
                             } else {
-                                newFrame = "net3.R2" + ";" + R2Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+                                newFrame = virtIP + ";" + R2Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
                                 System.out.println(side + " in-directly connected, created frame: " + newFrame);
                             }
                         }

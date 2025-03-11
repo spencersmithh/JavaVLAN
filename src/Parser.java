@@ -70,6 +70,14 @@ public class Parser {
         return info.split(",");
     }
 
+    public String getRouterVirtualIP(String side) {
+        if (side.equals("L")) {
+            return getRouterNetInfo()[0];
+        } else {
+            return getRouterNetInfo()[1];
+        }
+    }
+
     public InetAddress getRouterIP() throws UnknownHostException {
         return InetAddress.getByName(getRouterNetInfo()[0]);
     }
