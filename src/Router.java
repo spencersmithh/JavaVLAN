@@ -49,6 +49,12 @@ public class Router {
         }
         @Override
         public void run() {
+            // TODO: Take out all hard-coded net stuff.
+            //       Distance Vector stuff --> generate initial DV, send to neighbors
+            //          JAVA Record: (cost, next_hop) --> each destination represented by a record --> key: destination, value: record
+            //       Differentiate between two different kinds of packets (host vs. router) --> add header to frame (0 or 1)
+            //       Add new logic to process DV frame
+
             while (true) {
                 try {
                     System.out.println("listening side: " + side +" at port: " + getPortSide(side));
@@ -85,8 +91,6 @@ public class Router {
                     R2Table.put("net3", new String[]{"S2" , "yes"});
 
                     try {
-                        // this was in a while loop for why?????????
-
                         String newFrame;
                         String net = frameParts[3].split("\\.")[0];
 

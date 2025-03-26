@@ -32,6 +32,7 @@ public class Host{
     static class listen implements Runnable {
         @Override
         public void run() {
+            // TODO: insert header to frame to indicate that it's a host frame (0 or 1)
             while (true) {
                 try {
                     byte[] buffer = new byte[1024];
