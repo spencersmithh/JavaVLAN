@@ -83,14 +83,14 @@ public class Host{
                         // if in same subnet
                         // NOTE
                         // need to make the frameMessage longer, as explained on the project2 pdf
-                        frameMessage = name +";"+ destinationVirtualIp.split("\\.")[1] + ";" + message;
+                        frameMessage = 1 +";"+ name +";"+ destinationVirtualIp.split("\\.")[1] + ";" + message;
                         System.out.println(frameMessage);
                     } else {
                         // if not in same subnet, send to router
                         // NOTE
                         // need to make the frameMessage longer, as explained on the project2 pdf
                         // changes the inner packet but is still sent to the switch via neighbor bellow vvv
-                        frameMessage = name +";"+ router + ";" + ip + ";" + destinationVirtualIp + ";" + message;
+                        frameMessage = 1 +";"+ name +";"+ router + ";" + ip + ";" + destinationVirtualIp + ";" + message;
                         System.out.println(frameMessage);
                     }
                     byte[] frameBytes = convertStringToBytes(frameMessage);

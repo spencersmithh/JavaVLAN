@@ -39,13 +39,13 @@ public class Switch {
 
             // Parse frame
             String[] frameParts = frame.split(";");
-            if (frameParts.length < 3){
+            if (frameParts.length < 4){
                 System.out.println("Frame has incorrect length");
                 continue;
             }
 
-            Parser src = new Parser(frameParts[0]);
-            Parser dest = new Parser(frameParts[1]);
+            Parser src = new Parser(frameParts[1]);
+            Parser dest = new Parser(frameParts[2]);
 
 //            adds sourceMAC to IP table if not found
             if (!switchTable.containsKey(src.getID())){
