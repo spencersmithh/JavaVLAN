@@ -49,6 +49,16 @@ public class Parser {
         return rawConnections.split(",");
     }
 
+    public int[] getRouterNeighborPorts() {
+        int[] neighborPorts = {};
+        String[] neighbors = getNeighbors();
+        for(int i = 0; i < neighbors.length; i++) {
+            String tempPort = properties.getProperty(neighbors[i]).split(",")[2];
+            neighborPorts[i] = Integer.parseInt(tempPort);
+        }
+        return neighborPorts;
+    }
+
     public String getID() {
         return name;
     }

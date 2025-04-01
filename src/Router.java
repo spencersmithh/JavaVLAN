@@ -7,36 +7,47 @@ import java.util.concurrent.Executors;
 public class Router {
     private static Parser parser;
     private static String routerID;
+    private static int[] neighborPorts;
 //    volatile static String portSide = "L";
 
     public Router(String[] args) {
         routerID = args[0];
         parser = new Parser(routerID);
+        neighborPorts = parser.getRouterNeighborPorts();
     }
 
-    public static Integer getPortSide(String side){
-        int[] r1ports = new int[]{3007, 3008};
-        int[] r2ports = new int[]{3009, 3010};
-
-        if (routerID.equals("R1")){
-            if (side.equals("L")){
-                return r1ports[0];
-            }else{
-                return r1ports[1];
-            }
-        }else{
-            if (side.equals("L")){
-                return r2ports[0];
-            }else{
-                return r2ports[1];
-            }
-        }
+    public int[] getNeighborPorts() {
+        return neighborPorts;
     }
+
+//    public static Integer getPortSide(String side){ // THIS HAS TO CHANGE
+//        int[] r1ports = new int[]{3007, 3008};
+//        int[] r2ports = new int[]{3009, 3010};
+//
+//        if (routerID.equals("R1")){
+//            if (side.equals("L")){
+//                return r1ports[0];
+//            }else{
+//                return r1ports[1];
+//            }
+//        }else{
+//            if (side.equals("L")){
+//                return r2ports[0];
+//            }else{
+//                return r2ports[1];
+//            }
+//        }
+//    }
 
     public static class portProcess implements Runnable {
-        private String side;
+        // private String side;
+        private int port;
 
-        public String swapSide(String side){
+        public portProcess(int port) {
+            this.port = port;
+        }
+
+        public String swapSide(String side){ // THIS HAS TO CHANGE
             if (side.equals("R")){
                 return "L";
             }else {
@@ -44,9 +55,24 @@ public class Router {
             }
         }
 
-        public portProcess(String side) {
-            this.side = side;
+        public int changePort(int currentPort) {
+            int len = neighborPorts.length;
+            int newPort = -1;
+
+            for (int i = 0; i < len; i++) {
+                if (currentPort == neighborPorts[i]) {
+                    if (i != len-1) {
+                        newPort = neighborPorts[i+1];
+                    } else { newPort = neighborPorts[0]; }
+                }
+            }
+
+            return newPort;
         }
+
+//        public portProcess(String side) { // moved to the top
+//            this.side = side;
+//        } // THIS HAS TO CHANGE
         @Override
         public void run() {
             // TODO: Take out all hard-coded net stuff.
@@ -57,23 +83,33 @@ public class Router {
 
             while (true) {
                 try {
-                    System.out.println("listening side: " + side +" at port: " + getPortSide(side));
+                    /*
+                     System.out.println("listening side: " + side +" at port: " + getPortSide(side));
                     DatagramSocket socket = new DatagramSocket(getPortSide(side));
+                    */
+                    System.out.println("Listening port: " + port);
+                    DatagramSocket socket = new DatagramSocket(port);
                     DatagramPacket frameRequest = new DatagramPacket(new byte[1024], 1024);
 
+                    /*
                     System.out.println(side + " awaiting frame...");
+                    System.out.println(side + " Frame received: " + frame);
+                    */
+                    System.out.println("Port " + port + " is awaiting frame...");
                     socket.receive(frameRequest);
                     String frame = new String(frameRequest.getData(), 0, frameRequest.getLength());
-                    System.out.println(side + " Frame received: " + frame);
+                    System.out.println("Port " + port + " received frame: " + frame);
 
                     // Parse frame
                     String[] frameParts = frame.split(";");
                     if (frameParts.length < 5) {
                         if (frameParts.length == 3){
-//                            need a better system for rejecting flood frames, should the router be getting these anyway??
-                            System.out.println(side + " ignoring flood frame: " + frame);
+                            // need a better system for rejecting flood frames, should the router be getting these anyway??
+                            // System.out.println(side + " ignoring flood frame: " + frame);
+                            System.out.println("Port " + port + " ignoring flood frame: " + frame);
                         }else{
-                            System.out.println(side + " Frame has incorrect length");
+                            // System.out.println(side + " Frame has incorrect length");
+                            System.out.println("Port " + port + ": Frame has incorrect length");
                         }
                         socket.close();
                         continue;
@@ -100,28 +136,32 @@ public class Router {
                         }
 
                         String destMAC;
-                        side = swapSide(side);
+                        // side = swapSide(side);
+                        port = changePort(port);
                         if (routerID.equals("R1")) {
                             destMAC = R1Table.get(net)[0];
                             if (R1Table.get(net)[1].equals("yes")) {
                                 newFrame = "net1.R1" + ";" + frameParts[3].split("\\.")[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
-                                System.out.println(side + " directly connected, created frame: " + newFrame);
+                                // System.out.println(side + " directly connected, created frame: " + newFrame);
                             } else {
                                 newFrame = "net2.R1" + ";" + R1Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
-                                System.out.println(side + " in-directly connected, created frame: " + newFrame);
+                                // System.out.println(side + " in-directly connected, created frame: " + newFrame);
                             }
+                            System.out.println("Port " + port + " is directly connected, created frame: " + newFrame);
                         } else {
                             destMAC = R2Table.get(net)[0];
                             if (R2Table.get(net)[1].equals("yes")) {
                                 newFrame = "net3.R2" + ";" + frameParts[3].split("\\.")[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
-                                System.out.println(side + " directly connected, created frame: " + newFrame);
+                                // System.out.println(side + " directly connected, created frame: " + newFrame);
                             } else {
                                 newFrame = "net2.R2" + ";" + R2Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
-                                System.out.println(side + " in-directly connected, created frame: " + newFrame);
+                                // System.out.println(side + " in-directly connected, created frame: " + newFrame);
                             }
+                            System.out.println("Port " + port + " is directly connected, created frame: " + newFrame);
                         }
 
-                        System.out.println(side + " sending out final packet: " + newFrame);
+                        // System.out.println(side + " sending out final packet: " + newFrame);
+                        System.out.println("Port " + port + " is sending out final packet: " + newFrame);
                         Parser destMacParser = new Parser(destMAC);
                         DatagramPacket finalPacket = new DatagramPacket(newFrame.getBytes(), newFrame.length(), destMacParser.getIP(), destMacParser.getPort());
                         socket.send(finalPacket);
@@ -133,23 +173,53 @@ public class Router {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                side = swapSide(side);
+                port = changePort(port);
             }
         }
     }
 
     public static void main(String[] args) throws Exception {
-        new Router(args);
-
+        Router router = new Router(args);
         if(args.length < 1){
             System.out.println("Switch name not provided in arguments...");
             System.exit(1);
         }
 
-        ExecutorService es = Executors.newFixedThreadPool(2);
-        Runnable portProcess1 = new Router.portProcess("L");
-        Runnable portProcess2 = new Router.portProcess("R");
-        es.submit(portProcess1);
-        es.submit(portProcess2);
+        int[] nPorts = router.getNeighborPorts();
+        int numNeighbors = nPorts.length;
+
+        if (numNeighbors == 4) {
+            ExecutorService es = Executors.newFixedThreadPool(4);
+            Runnable port1 = new Router.portProcess(nPorts[0]);
+            Runnable port2 = new Router.portProcess(nPorts[1]);
+            Runnable port3 = new Router.portProcess(nPorts[2]);
+            Runnable port4 = new Router.portProcess(nPorts[3]);
+            es.submit(port1);
+            es.submit(port2);
+            es.submit(port3);
+            es.submit(port4);
+        } else if (numNeighbors == 3) {
+            ExecutorService es = Executors.newFixedThreadPool(3);
+            Runnable port1 = new Router.portProcess(nPorts[0]);
+            Runnable port2 = new Router.portProcess(nPorts[1]);
+            Runnable port3 = new Router.portProcess(nPorts[2]);
+            es.submit(port1);
+            es.submit(port2);
+            es.submit(port3);
+        } else if (numNeighbors == 2) {
+            ExecutorService es = Executors.newFixedThreadPool(2);
+            Runnable port1 = new Router.portProcess(nPorts[0]);
+            Runnable port2 = new Router.portProcess(nPorts[1]);
+            es.submit(port1);
+            es.submit(port2);
+        } else {
+            System.out.println("Incorrect number of neighbors!");
+        }
+
+//        ExecutorService es = Executors.newFixedThreadPool(2);
+//        Runnable portProcess1 = new Router.portProcess("L");
+//        Runnable portProcess2 = new Router.portProcess("R");
+//        es.submit(portProcess1);
+//        es.submit(portProcess2);
     }
 }
