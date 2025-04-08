@@ -8,7 +8,6 @@ public class Router {
     private static Parser parser;
     private static String routerID;
     private static int[] neighborPorts;
-//    volatile static String portSide = "L";
 
     public Router(String[] args) {
         routerID = args[0];
@@ -20,39 +19,11 @@ public class Router {
         return neighborPorts;
     }
 
-//    public static Integer getPortSide(String side){ // THIS HAS TO CHANGE
-//        int[] r1ports = new int[]{3007, 3008};
-//        int[] r2ports = new int[]{3009, 3010};
-//
-//        if (routerID.equals("R1")){
-//            if (side.equals("L")){
-//                return r1ports[0];
-//            }else{
-//                return r1ports[1];
-//            }
-//        }else{
-//            if (side.equals("L")){
-//                return r2ports[0];
-//            }else{
-//                return r2ports[1];
-//            }
-//        }
-//    }
-
     public static class portProcess implements Runnable {
-        // private String side;
         private int port;
 
         public portProcess(int port) {
             this.port = port;
-        }
-
-        public String swapSide(String side){ // THIS HAS TO CHANGE
-            if (side.equals("R")){
-                return "L";
-            }else {
-                return "R";
-            }
         }
 
         public int changePort(int currentPort) {
@@ -70,8 +41,6 @@ public class Router {
             return newPort;
         }
 
-//        public portProcess(String side) { // moved to the top
-//            this.side = side;
 //        } // THIS HAS TO CHANGE
         @Override
         public void run() {
@@ -83,19 +52,15 @@ public class Router {
 
             while (true) {
                 try {
-                    /*
-                     System.out.println("listening side: " + side +" at port: " + getPortSide(side));
-                    DatagramSocket socket = new DatagramSocket(getPortSide(side));
-                    */
                     System.out.println("Listening port: " + port);
                     DatagramSocket socket = new DatagramSocket(port);
                     DatagramPacket frameRequest = new DatagramPacket(new byte[1024], 1024);
 
-                    /*
-                    System.out.println(side + " awaiting frame...");
-                    System.out.println(side + " Frame received: " + frame);
-                    */
+//                    System.out.println(side + " awaiting frame...");
+//                    System.out.println(side + " Frame received: " + frame);
+
                     System.out.println("Port " + port + " is awaiting frame...");
+//                    TODO: determine frame type
                     socket.receive(frameRequest);
                     String frame = new String(frameRequest.getData(), 0, frameRequest.getLength());
                     System.out.println("Port " + port + " received frame: " + frame);
@@ -116,15 +81,15 @@ public class Router {
                     }
 
                     //        MAYBE CHANGE THIS LATER
-                    HashMap<String, String[]> R1Table = new HashMap<>();
-                    R1Table.put("net1", new String[]{"S1" , "yes"});
-                    R1Table.put("net2", new String[]{"net2.R2" , "yes"});
-                    R1Table.put("net3", new String[]{"net2.R2" , "no"});
-
-                    HashMap<String, String[]> R2Table = new HashMap<>();
-                    R2Table.put("net1", new String[]{"net2.R1" , "no"});
-                    R2Table.put("net2", new String[]{"net2.R1", "yes"});
-                    R2Table.put("net3", new String[]{"S2" , "yes"});
+//                    HashMap<String, String[]> R1Table = new HashMap<>();
+//                    R1Table.put("net1", new String[]{"S1" , "yes"});
+//                    R1Table.put("net2", new String[]{"net2.R2" , "yes"});
+//                    R1Table.put("net3", new String[]{"net2.R2" , "no"});
+//
+//                    HashMap<String, String[]> R2Table = new HashMap<>();
+//                    R2Table.put("net1", new String[]{"net2.R1" , "no"});
+//                    R2Table.put("net2", new String[]{"net2.R1", "yes"});
+//                    R2Table.put("net3", new String[]{"S2" , "yes"});
 
                     try {
                         String newFrame;
@@ -135,32 +100,36 @@ public class Router {
                             System.exit(1);
                         }
 
-                        String destMAC;
-                        // side = swapSide(side);
-                        port = changePort(port);
-                        if (routerID.equals("R1")) {
-                            destMAC = R1Table.get(net)[0];
-                            if (R1Table.get(net)[1].equals("yes")) {
-                                newFrame = "net1.R1" + ";" + frameParts[3].split("\\.")[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
-                                // System.out.println(side + " directly connected, created frame: " + newFrame);
-                            } else {
-                                newFrame = "net2.R1" + ";" + R1Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
-                                // System.out.println(side + " in-directly connected, created frame: " + newFrame);
-                            }
-                            System.out.println("Port " + port + " is directly connected, created frame: " + newFrame);
-                        } else {
-                            destMAC = R2Table.get(net)[0];
-                            if (R2Table.get(net)[1].equals("yes")) {
-                                newFrame = "net3.R2" + ";" + frameParts[3].split("\\.")[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
-                                // System.out.println(side + " directly connected, created frame: " + newFrame);
-                            } else {
-                                newFrame = "net2.R2" + ";" + R2Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
-                                // System.out.println(side + " in-directly connected, created frame: " + newFrame);
-                            }
-                            System.out.println("Port " + port + " is directly connected, created frame: " + newFrame);
-                        }
+//                        String destMAC;
+//                        // side = swapSide(side);
+//                        port = changePort(port);
+//                        if (routerID.equals("R1")) {
+//                            destMAC = R1Table.get(net)[0];
+//                            if (R1Table.get(net)[1].equals("yes")) {
+//                                newFrame = "net1.R1" + ";" + frameParts[3].split("\\.")[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+//                                // System.out.println(side + " directly connected, created frame: " + newFrame);
+//                            } else {
+//                                newFrame = "net2.R1" + ";" + R1Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+//                                // System.out.println(side + " in-directly connected, created frame: " + newFrame);
+//                            }
+//                            System.out.println("Port " + port + " is directly connected, created frame: " + newFrame);
+//                        } else {
+//                            destMAC = R2Table.get(net)[0];
+//                            if (R2Table.get(net)[1].equals("yes")) {
+//                                newFrame = "net3.R2" + ";" + frameParts[3].split("\\.")[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+//                                // System.out.println(side + " directly connected, created frame: " + newFrame);
+//                            } else {
+//                                newFrame = "net2.R2" + ";" + R2Table.get(net)[0] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+//                                // System.out.println(side + " in-directly connected, created frame: " + newFrame);
+//                            }
+//                            System.out.println("Port " + port + " is directly connected, created frame: " + newFrame);
+//                        }
 
-                        // System.out.println(side + " sending out final packet: " + newFrame);
+//                      System.out.println(side + " sending out final packet: " + newFrame);
+//                      newFrame = "net1.R1" + ";" + frameParts[3].split("\\.")[1] + ";" + frameParts[2] + ";" + frameParts[3] + ";" + frameParts[4];
+//                      destMAC = R2Table.get(net)[0];
+//
+
                         System.out.println("Port " + port + " is sending out final packet: " + newFrame);
                         Parser destMacParser = new Parser(destMAC);
                         DatagramPacket finalPacket = new DatagramPacket(newFrame.getBytes(), newFrame.length(), destMacParser.getIP(), destMacParser.getPort());
@@ -188,33 +157,33 @@ public class Router {
         int[] nPorts = router.getNeighborPorts();
         int numNeighbors = nPorts.length;
 
-        if (numNeighbors == 4) {
-            ExecutorService es = Executors.newFixedThreadPool(4);
-            Runnable port1 = new Router.portProcess(nPorts[0]);
-            Runnable port2 = new Router.portProcess(nPorts[1]);
-            Runnable port3 = new Router.portProcess(nPorts[2]);
-            Runnable port4 = new Router.portProcess(nPorts[3]);
-            es.submit(port1);
-            es.submit(port2);
-            es.submit(port3);
-            es.submit(port4);
-        } else if (numNeighbors == 3) {
-            ExecutorService es = Executors.newFixedThreadPool(3);
-            Runnable port1 = new Router.portProcess(nPorts[0]);
-            Runnable port2 = new Router.portProcess(nPorts[1]);
-            Runnable port3 = new Router.portProcess(nPorts[2]);
-            es.submit(port1);
-            es.submit(port2);
-            es.submit(port3);
-        } else if (numNeighbors == 2) {
-            ExecutorService es = Executors.newFixedThreadPool(2);
-            Runnable port1 = new Router.portProcess(nPorts[0]);
-            Runnable port2 = new Router.portProcess(nPorts[1]);
-            es.submit(port1);
-            es.submit(port2);
-        } else {
-            System.out.println("Incorrect number of neighbors!");
-        }
+//        if (numNeighbors == 4) {
+//            ExecutorService es = Executors.newFixedThreadPool(4);
+//            Runnable port1 = new Router.portProcess(nPorts[0]);
+//            Runnable port2 = new Router.portProcess(nPorts[1]);
+//            Runnable port3 = new Router.portProcess(nPorts[2]);
+//            Runnable port4 = new Router.portProcess(nPorts[3]);
+//            es.submit(port1);
+//            es.submit(port2);
+//            es.submit(port3);
+//            es.submit(port4);
+//        } else if (numNeighbors == 3) {
+//            ExecutorService es = Executors.newFixedThreadPool(3);
+//            Runnable port1 = new Router.portProcess(nPorts[0]);
+//            Runnable port2 = new Router.portProcess(nPorts[1]);
+//            Runnable port3 = new Router.portProcess(nPorts[2]);
+//            es.submit(port1);
+//            es.submit(port2);
+//            es.submit(port3);
+//        } else if (numNeighbors == 2) {
+//            ExecutorService es = Executors.newFixedThreadPool(2);
+//            Runnable port1 = new Router.portProcess(nPorts[0]);
+//            Runnable port2 = new Router.portProcess(nPorts[1]);
+//            es.submit(port1);
+//            es.submit(port2);
+//        } else {
+//            System.out.println("Incorrect number of neighbors!");
+//        }
 
 //        ExecutorService es = Executors.newFixedThreadPool(2);
 //        Runnable portProcess1 = new Router.portProcess("L");
