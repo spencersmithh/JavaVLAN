@@ -5,15 +5,6 @@ import java.util.*;
 
 public class Router {
 
-//    private static routerRecord getRouterRecord(String neighbor) throws UnknownHostException {
-////         create parser object for the neighbor
-//        Parser neighborParser = new Parser(neighbor);
-//        // create the next hop tuple data type for that neighbor, goes in record
-//        ipPortTuple<InetAddress, Integer> nextHop = new ipPortTuple<>(neighborParser.getIP(),neighborParser.getPort());
-//        // create the record for the neighbor, return
-//        return new routerRecord(neighbor,1, nextHop);
-//    }
-
     public static void main(String[] args) throws Exception {
         if (args.length < 1) {
             System.out.println("Switch name not provided in arguments...");
@@ -117,6 +108,31 @@ public class Router {
                             break;
                         case "1": // "1" flag means user packet
                             // TODO: Forward user packet
+                            // Frame format: 1  name  router  ip  destinationVirtualIp  message;
+
+                            // splits destination virtualIp to get just the destination net info, for searching in routerTable
+                            String destVirtualIP = frameParts[4];
+                            String destNet = destVirtualIP.split("\\.")[0];
+
+                            Record entry = routerTable.get(destNet);
+                            if (entry == null) {
+                                System.out.println("No route to destination: " + destVirtualIP);
+                                break;
+                            }
+
+                            routerRecord<InetAddress, Integer> nextHop = entry.getNextHop();
+
+                            byte[] forwardBytes = frame.getBytes();
+                            DatagramPacket forwardPacket = new DatagramPacket(forwardBytes, forwardBytes.length,nextHop.ip(), nextHop.port());
+
+                            // Send using a temporary DatagramSocket
+                            DatagramSocket forwardSocket = new DatagramSocket();
+                            forwardSocket.send(forwardPacket);
+                            forwardSocket.close();
+
+                            System.out.println("Forwarded packet to " + destVirtualIP + " via " + nextHop.ip() + ":" + nextHop.port());
+                            break;
+
                             break;
                         case "0": // else "0" flag means it's a routing update
                             // TODO: Routing update – apply Bellman-Ford logic here
@@ -129,5 +145,4 @@ public class Router {
             }
         }
     }
-
 }
