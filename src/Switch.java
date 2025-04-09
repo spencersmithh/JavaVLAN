@@ -3,6 +3,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 public class Switch {
     public static void main(String[] args) throws Exception {
@@ -19,13 +20,17 @@ public class Switch {
         // create the switch table. format = {"macName";"IP:Port"}
         HashMap<String, String> switchTable = new HashMap<>();
         // populate switch table with that subnets router
-        if (args[0].equals("S1")){
-            Parser routerR1 = new Parser("net1.R1");
-            switchTable.put("net1.R1", routerR1.getIP().toString().replace("/","") + ";" + routerR1.getPort());
-        }else{
-            Parser routerR2 = new Parser("net3.R2");
-            switchTable.put("net3.R2",  routerR2.getIP().toString().replace("/","") + ";" + routerR2.getPort() );
+
+        Parser router = new Parser(parser.getSwitchsRouter());
+        // putting the router in the switches table
+        switchTable.put(parser.getSwitchsRouter(), router.getIP().toString() + ";" + router.getPort());
+        System.out.println("\n--- Switch Table ---");
+        for (Map.Entry<String, String> entry : switchTable.entrySet()) {
+            System.out.println(entry.getKey() + " -> " + entry.getValue());
         }
+        System.out.println("---------------------\n");
+
+
         System.out.println("populated table with router info");
 
         DatagramSocket socket = new DatagramSocket(parser.getPort());
@@ -54,16 +59,20 @@ public class Switch {
             }
 
 //            if the destMAC is known forward to known location
-            if (switchTable.containsKey(dest.getID())){
-//                System.out.println("destMac Known. forwarding packet...");
+            String IPPort = dest.getID().replace("/","");
+            System.out.println(IPPort);
+            if (switchTable.containsKey(IPPort)){
+                System.out.println("destMac Known. forwarding packet...");
                 byte[] response = frame.getBytes();
 
-                InetAddress toAddress = InetAddress.getByName(switchTable.get(dest.getID()).split(";")[0]);
-                int toPort = Integer.parseInt(switchTable.get(dest.getID()).split(";")[1]);
+                String address = switchTable.get(IPPort).split(";")[0].replace("/","");
+                System.out.println(address);
+                InetAddress toAddress = InetAddress.getByName(address);
+                int toPort = Integer.parseInt(switchTable.get(IPPort).split(";")[1]);
 
                 DatagramPacket forwardPacket = new DatagramPacket(response, response.length, toAddress, toPort);
                 socket.send(forwardPacket);
-                System.out.println("destMac Known. packet forwarded to: "+ dest.getID() + ":" + switchTable.get(dest.getID()));
+                System.out.println("destMac Known. packet forwarded to: "+ IPPort + ":" + switchTable.get(IPPort));
 
             } else {
                 // Flooding

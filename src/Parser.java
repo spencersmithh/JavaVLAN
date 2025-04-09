@@ -82,8 +82,13 @@ public class Parser {
 
             for (String port: ports) {
                 finalPorts.add(Integer.valueOf(properties.getProperty(port).split(",")[1]));
+                System.out.println("entry: " + port);
             }
 
             return finalPorts;
+        }
+
+        public String getSwitchsRouter(){
+            return properties.getProperty(name +"conn").split(",")[1];
         }
     }
