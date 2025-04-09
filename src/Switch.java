@@ -75,12 +75,17 @@ public class Switch {
                     // creates a parser for each neighbor
                     Parser newNeighborParser = new Parser(neighbor);
 
+                    // make frame have a 2 flag at the start
+                    frameParts[0] = "2";
+                    String newFrame = String.join(";", frameParts);
+
+
                     // check to stop sending back to source
                     String neighborID = newNeighborParser.getIP().toString() + ";" + newNeighborParser.getPort();
 
                     if (!fromID.equals(neighborID.replace("/",""))){
                         System.out.println("successful flood: "+ neighbor + " " + neighborID.replace("/","") + " " + fromID);
-                        DatagramPacket flooder = new DatagramPacket(frame.getBytes(), frame.length(), newNeighborParser.getIP(), newNeighborParser.getPort());
+                        DatagramPacket flooder = new DatagramPacket(newFrame.getBytes(), newFrame.length(), newNeighborParser.getIP(), newNeighborParser.getPort());
                         socket.send(flooder);
                     }
                 }
