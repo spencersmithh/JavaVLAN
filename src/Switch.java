@@ -31,7 +31,7 @@ public class Switch {
         System.out.println("---------------------\n");
 
 
-        System.out.println("populated table with router info");
+        System.out.println("Populated table with router info");
 
         DatagramSocket socket = new DatagramSocket(parser.getPort());
         DatagramPacket frameRequest = new DatagramPacket(new byte[1024], 1024);
@@ -62,7 +62,7 @@ public class Switch {
             String IPPort = dest.getID().replace("/","");
             System.out.println(IPPort);
             if (switchTable.containsKey(IPPort)){
-                System.out.println("destMac Known. forwarding packet...");
+                System.out.println("Destination MAC known. Forwarding packet...");
                 byte[] response = frame.getBytes();
 
                 String address = switchTable.get(IPPort).split(";")[0].replace("/","");
@@ -72,7 +72,7 @@ public class Switch {
 
                 DatagramPacket forwardPacket = new DatagramPacket(response, response.length, toAddress, toPort);
                 socket.send(forwardPacket);
-                System.out.println("destMac Known. packet forwarded to: "+ IPPort + ":" + switchTable.get(IPPort));
+                System.out.println("Destination MAC known. Packet forwarded to: "+ IPPort + ":" + switchTable.get(IPPort));
 
             } else {
                 // Flooding
