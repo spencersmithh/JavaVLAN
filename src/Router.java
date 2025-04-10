@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
@@ -5,7 +6,53 @@ import java.util.*;
 
 public class Router {
 
+    public static void sendStarterRouterPacket(boolean hasRun, Parser routerParser) throws IOException, InterruptedException {
+        if (!hasRun) {
+            int timeMs = 1000;
+            System.out.println("starter packet running in:"+ timeMs/1000);
+            Thread.sleep(timeMs);
+
+            // Send updated vector to all neighbors
+//            String[] remove = routerTable.
+            List<String> startingTableData = new ArrayList<>();
+            for (Map.Entry<String, routerRecord> entry : routerTable.entrySet()) {
+                String destination = entry.getKey();
+                int value = entry.getValue().distance();
+                String nextHop = entry.getValue().nextHop();
+//                System.out.println(destination + " " + value + " " + nextHop);
+
+                startingTableData.add(Arrays.toString(new String[]{destination, String.valueOf(value), nextHop}));
+            }
+            System.out.println(startingTableData);
+
+//            String routerFrame = "0;"+ routerFrameParts.toString();
+//            byte[] routerFrameBytes = routerFrame.getBytes();
+//
+//            System.out.println("starter router table created, sending to neighbors. frame: "+ routerFrame);
+//
+//            String[] routerNeighbors = routerParser.getNeighbors();
+//            for (String neighbor:routerNeighbors) {
+//                Parser neigborParser = new Parser(neighbor);
+//                DatagramPacket forwardRouterPacket = new DatagramPacket(routerFrameBytes, routerFrameBytes.length,neigborParser.getIP(), neigborParser.getPort());
+//
+//                // Send using a temporary DatagramSocket
+//                DatagramSocket forwardRouterSocket = new DatagramSocket();
+//                forwardRouterSocket.send(forwardRouterPacket);
+//                forwardRouterSocket.close();
+//            }
+//            System.out.println("starter table sent to all neighbors");
+        }
+    }
+
+
+    public static boolean hasRun = false;
+    public static HashMap<String, routerRecord> routerTable = new HashMap<>();
+
     public static void main(String[] args) throws Exception {
+
+        // start by user input with args??
+        // start by calling specific function after sleeping for a few seconds this func changes a bool than no longer causes it to run
+
         if (args.length < 1) {
             System.out.println("Switch name not provided in arguments...");
             System.exit(1);
@@ -32,7 +79,7 @@ public class Router {
 
         // POPULATE ROUTER TABLE ----------------------------------
         String[] neighbors = routerParser.getNeighbors();
-        HashMap<String, routerRecord> routerTable = new HashMap<>();
+
 
         // populate initial neighbor table
         for (String neighbor:neighbors) {
@@ -53,29 +100,10 @@ public class Router {
         }
         System.out.println("---------------------\n");
 
+        System.out.println("sending out first router packet...");
+        sendStarterRouterPacket(hasRun,routerParser);
+        hasRun = true;
 
-
-
-//        if (args[0].equals("R3")) {
-//            System.out.println("Sending test routing packet from:" + args[0]);
-//
-////            1 +";"+ name +";"+ router + ";" + ip + ";" + destinationVirtualIp + ";" + message
-//            String testMessage = "0;A;R1;;"; // A mock routing update
-//            byte[] messageBytes = testMessage.getBytes();
-//
-//            DatagramSocket socket = new DatagramSocket(); // can auto-bind
-//
-//
-////            InetAddress localhost = InetAddress.getByName("127.0.0.1");
-////            int destinationPort = ports.get(0); // send to the first port in R1’s list
-//
-//            InetAddress destIP = InetAddress.getByName("10.228.241.22");
-//            int destPort = 3007;
-//            DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length,destIP, destPort);
-//
-//            socket.send(packet);
-//            socket.close();
-//        }
 
 
         while (true) {
@@ -133,44 +161,55 @@ public class Router {
 
                             break;
                         case "0": // Routing update
-                            // Frame format: 0
-                            String sender = frameParts[2];  // e.g., R3
-                            String vectorData = frameParts[5]; // e.g., "A,2|B,4"
 
-                            String[] entries = vectorData.split("\\|");
+                            //TODO STOP FROM SENDING EMPTY PACKETS, make sure the table updating stops
+
+                            List<String[]> routerFrameParts = new ArrayList<>();
+                            for (String item:frameParts) {
+                                if (item.equals("0")){
+                                    continue;
+                                }
+                                String[] splitItem = item.split(",");
+                                routerFrameParts.add(splitItem);
+                            }
+
                             boolean updated = false;
 
-                            for (String entryStr : entries) {
-                                String[] entryParts = entryStr.split(",");
-                                String dest = entryParts[0];
-                                int costFromSender = Integer.parseInt(entryParts[1]);
+                            for (String[] entry : routerFrameParts) {
+                                String sender = entry[0];
+                                int distance = Integer.parseInt(entry[1]);
+                                String nextHop = entry[2];
 
-                                int totalCost = 1 + costFromSender; // cost to sender + cost from sender to dest
+                                String destination = nextHop.split("\\.")[0];
+                                int totalCost = distance + 1;
 
-                                routerRecord current = routerTable.get(dest);
-                                if (current == null || totalCost < current.distance()) {
-                                    routerTable.put(dest, new routerRecord(totalCost, sender));
+                                //bellman ford
+                                routerRecord current = routerTable.get(destination);
+                                if (current == null || totalCost <= distance) {
+                                    System.out.println("updated router table with: "+destination+": "+totalCost+", "+sender);
+                                    routerTable.remove(destination);
+                                    routerTable.put(destination, new routerRecord(totalCost, sender));
                                     updated = true;
                                 }
                             }
 
                             if (updated) {
                                 // Send updated vector to all neighbors
-
-                                String routerFrame = "0;";
+                                String routerFrame = "0;"+ routerFrameParts.toString();
                                 byte[] routerFrameBytes = routerFrame.getBytes();
+
+                                System.out.println("router table updated, sending to neighbors. frame: "+ routerFrame);
 
                                 String[] routerNeighbors = routerParser.getNeighbors();
                                 for (String neighbor:routerNeighbors) {
+                                    Parser neigborParser = new Parser(neighbor);
+                                    DatagramPacket forwardRouterPacket = new DatagramPacket(routerFrameBytes, routerFrameBytes.length,neigborParser.getIP(), neigborParser.getPort());
 
+                                    // Send using a temporary DatagramSocket
+                                    DatagramSocket forwardRouterSocket = new DatagramSocket();
+                                    forwardRouterSocket.send(forwardRouterPacket);
+                                    forwardRouterSocket.close();
                                 }
-
-//                                DatagramPacket forwardRouterPacket = new DatagramPacket(routerFrameBytes, routerFrameBytes.length,nextHopParser.getIP(), nextHopParser.getPort());
-
-                                // Send using a temporary DatagramSocket
-                                DatagramSocket forwardRouterSocket = new DatagramSocket();
-//                                forwardRouterSocket.send(forwardRouterPacket);
-                                forwardRouterSocket.close();
                             }
                             break;
                         default:
