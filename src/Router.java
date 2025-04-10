@@ -12,20 +12,22 @@ public class Router {
             System.out.println("starter packet running in:"+ timeMs/1000);
             Thread.sleep(timeMs);
 
+            StringBuilder startingTableData = new StringBuilder("0");
+
             // Send updated vector to all neighbors
-//            String[] remove = routerTable.
-            List<String> startingTableData = new ArrayList<>();
+            String entryItem = "";
             for (Map.Entry<String, routerRecord> entry : routerTable.entrySet()) {
                 String destination = entry.getKey();
-                int value = entry.getValue().distance();
+                int distance = entry.getValue().distance();
                 String nextHop = entry.getValue().nextHop();
-//                System.out.println(destination + " " + value + " " + nextHop);
 
-                startingTableData.add(Arrays.toString(new String[]{destination, String.valueOf(value), nextHop}));
+                entryItem = ";"+ destination +","+ distance +","+ nextHop
++               startingTableData.append(entryItem);
             }
+
             System.out.println(startingTableData);
 
-//            String routerFrame = "0;"+ routerFrameParts.toString();
+
 //            byte[] routerFrameBytes = routerFrame.getBytes();
 //
 //            System.out.println("starter router table created, sending to neighbors. frame: "+ routerFrame);
