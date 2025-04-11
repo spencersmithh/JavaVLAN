@@ -25,8 +25,6 @@ public class Parser {
         String rawMac = properties.getProperty(name);
         if (rawMac == null) {
             throw new IllegalArgumentException("No entry found for " + name + " in config.properties");
-//        } else if (name.contains("S")) {
-//            return properties.getProperty(name).split(",");
         }
         return rawMac.split(",");
     }
@@ -39,6 +37,7 @@ public class Parser {
         return Integer.parseInt(getNetInfo()[1]);
     }
 
+    // gets the devices connections, returns
     public String[] getNeighbors() {
         String rawConnections;
         if (name.contains(".")) {
@@ -68,13 +67,6 @@ public class Parser {
         public String getRouterName() {
             return getNetInfo()[3];
         }
-
-    //  gets the routers neighbors based of ex: R1conn in config
-//    public String[] getRouterNeighbors(){
-//        String[] neighbors = properties.getProperty(getID() + "conn").split(",");
-//
-//        return neighbors;
-//    }
 
     //    get the routers own ports
         public List<Integer> getRouterPorts(){

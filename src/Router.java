@@ -27,11 +27,9 @@ public class Router {
         return starerRouterFrame;
     }
 
-    public static void sendStarterRouterPacket(Parser routerParser) throws IOException, InterruptedException {
+    public static void sendStarterRouterPacket(Parser routerParser) throws IOException {
         // call to create router frame
         String starerRouterFrame = createRouterFrame(routerParser);
-
-        System.out.println(starerRouterFrame);
 
         byte[] routerFrameBytes = starerRouterFrame.getBytes();
         System.out.println("starter router table created, sending to neighbors. frame: "+ starerRouterFrame);
@@ -55,8 +53,6 @@ public class Router {
         }
         System.out.println("starter table sent to all neighbors");
     }
-
-
 
     public static HashMap<String, routerRecord> routerTable = new HashMap<>();
 
@@ -90,28 +86,25 @@ public class Router {
         // POPULATE ROUTER TABLE ----------------------------------
         String[] neighbors = routerParser.getNeighbors();
 
-
         // populate initial neighbor table
         for (String neighbor:neighbors) {
 
             // split net info
             String netDestination = neighbor.split("\\.")[0];
-
-            // get all info for the table entry (a bit complicated)
             routerRecord recordEntry = new routerRecord(1, neighbor);
             // put all info into local router table
             routerTable.put(netDestination, recordEntry);
         }
 
         printRouterTable();
-//        if (routerName.equals("R1")){
+
+        //wait 25 seconds to ensure all routers are running at the same time
         int timeMs = 25000;
         System.out.println("starter packet running in:"+ timeMs/1000);
         Thread.sleep(timeMs);
 
         System.out.println("sending out first router packet...");
         sendStarterRouterPacket(routerParser);
-//        }
 
         while (true) {
             selector.select(); // Block until something is ready
@@ -161,7 +154,7 @@ public class Router {
                                 break;
                             }
 
-                            // scum away the net info to find switch ip,port through the config
+                            // scum away the net info to find switch "ip,port" through the config
                             String nextHopParserVIP = nextHopRecord.nextHop();
                             if (nextHopParserVIP.contains("S")){
                                 nextHopParserVIP = nextHopParserVIP.substring(5);
@@ -181,22 +174,17 @@ public class Router {
                             break;
                         case "0": // Routing update
 
-                            //TODO STOP FROM SENDING EMPTY PACKETS, make sure the table updating stops
-                            // skips "0;net1.R1
+                            // skips "0;R1;
                             String[] routerStrippedFrame = frame.substring(5).split(";");
                             System.out.println(Arrays.toString(routerStrippedFrame));
 
                             List<String[]> routerFrameParts = new ArrayList<>();
                             for (String item:routerStrippedFrame) {
-//                                if (item.equals("0")){
-//                                    continue;
-//                                }
                                 String[] splitItem = item.split(",");
                                 System.out.println(Arrays.toString(splitItem));
                                 routerFrameParts.add(splitItem);
                             }
 
-                            //
                             String senderRouterVIP = "";
                             for (String neighbor:neighbors){
                                 if (neighbor.contains(senderRouterName)){
@@ -210,9 +198,6 @@ public class Router {
 
                                 String destination = entry[0];
                                 int distance = Integer.parseInt(entry[1]);
-//                                String nextHop = entry[2];
-
-//                                String hello = nextHop.split("\\.")[0];
                                 int totalCost = distance + 1;
 
                                 // skips checking self location
@@ -220,9 +205,6 @@ public class Router {
 
                                 //bellman ford
                                 routerRecord current = routerTable.get(destination);
-//                                System.out.println( "current compare" + destination + ": " + totalCost + ", " + senderRouterVIP);
-//                                System.out.println("CURRENT: "+ (totalCost<distance));
-
                                 System.out.println("destination: " + destination);
 
                                 if (current == null || totalCost < current.distance()) {
