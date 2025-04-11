@@ -25,6 +25,8 @@ public class Parser {
         String rawMac = properties.getProperty(name);
         if (rawMac == null) {
             throw new IllegalArgumentException("No entry found for " + name + " in config.properties");
+//        } else if (name.contains("S")) {
+//            return properties.getProperty(name).split(",");
         }
         return rawMac.split(",");
     }
