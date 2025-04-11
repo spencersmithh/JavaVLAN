@@ -6,54 +6,66 @@ import java.util.*;
 
 public class Router {
 
-    public static void sendStarterRouterPacket(boolean hasRun, Parser routerParser) throws IOException, InterruptedException {
-        if (!hasRun) {
-            int timeMs = 1000;
-            System.out.println("starter packet running in:"+ timeMs/1000);
-            Thread.sleep(timeMs);
+    public static void printRouterTable(){
+        System.out.println("\n--- Routing Table ---");
+        for (String dest : routerTable.keySet()) {
+            Record entry = routerTable.get(dest);
+            System.out.println(dest + " -> " + entry);
+        }
+        System.out.println("---------------------\n");
+    }
 
-            StringBuilder startingTableData = new StringBuilder("0");
+    public static String createRouterFrame(Parser routerParser){
+        String starerRouterFrame = "0;" + routerParser.getID();
+        for (Map.Entry<String, routerRecord> entry : routerTable.entrySet()) {
+            String destination = entry.getKey();
+            int distance = entry.getValue().distance();
+            String nextHop = entry.getValue().nextHop();
 
-            // Send updated vector to all neighbors
-            String entryItem = "";
-            for (Map.Entry<String, routerRecord> entry : routerTable.entrySet()) {
-                String destination = entry.getKey();
-                int distance = entry.getValue().distance();
-                String nextHop = entry.getValue().nextHop();
+            starerRouterFrame += ";"+ destination +","+ distance +","+ nextHop;
+        }
+        return starerRouterFrame;
+    }
 
-                entryItem = ";"+ destination +","+ distance +","+ nextHop
-+               startingTableData.append(entryItem);
+    public static void sendStarterRouterPacket(Parser routerParser) throws IOException, InterruptedException {
+
+        int timeMs = 1000;
+        System.out.println("starter packet running in:"+ timeMs/1000);
+        Thread.sleep(timeMs);
+
+        // call to create router frame
+        String starerRouterFrame = createRouterFrame(routerParser);
+
+        System.out.println(starerRouterFrame);
+
+        byte[] routerFrameBytes = starerRouterFrame.getBytes();
+        System.out.println("starter router table created, sending to neighbors. frame: "+ starerRouterFrame);
+
+        String[] routerNeighbors = routerParser.getNeighbors();
+        for (String neighbor:routerNeighbors) {
+            if (neighbor.contains("S")){
+                // skips sending starting router packet to switches
+                continue;
             }
 
-            System.out.println(startingTableData);
+            System.out.println("sending router packet to: " + neighbor);
 
+            Parser neigborParser = new Parser(neighbor);
+            DatagramPacket forwardRouterPacket = new DatagramPacket(routerFrameBytes, routerFrameBytes.length,neigborParser.getIP(), neigborParser.getPort());
 
-//            byte[] routerFrameBytes = routerFrame.getBytes();
-//
-//            System.out.println("starter router table created, sending to neighbors. frame: "+ routerFrame);
-//
-//            String[] routerNeighbors = routerParser.getNeighbors();
-//            for (String neighbor:routerNeighbors) {
-//                Parser neigborParser = new Parser(neighbor);
-//                DatagramPacket forwardRouterPacket = new DatagramPacket(routerFrameBytes, routerFrameBytes.length,neigborParser.getIP(), neigborParser.getPort());
-//
-//                // Send using a temporary DatagramSocket
-//                DatagramSocket forwardRouterSocket = new DatagramSocket();
-//                forwardRouterSocket.send(forwardRouterPacket);
-//                forwardRouterSocket.close();
-//            }
-//            System.out.println("starter table sent to all neighbors");
+            // Send using a temporary DatagramSocket
+            DatagramSocket forwardRouterSocket = new DatagramSocket(3001);
+            forwardRouterSocket.send(forwardRouterPacket);
+            forwardRouterSocket.close();
         }
+        System.out.println("starter table sent to all neighbors");
     }
 
 
-    public static boolean hasRun = false;
+
     public static HashMap<String, routerRecord> routerTable = new HashMap<>();
 
     public static void main(String[] args) throws Exception {
-
-        // start by user input with args??
-        // start by calling specific function after sleeping for a few seconds this func changes a bool than no longer causes it to run
 
         if (args.length < 1) {
             System.out.println("Switch name not provided in arguments...");
@@ -61,7 +73,8 @@ public class Router {
         }
 
         // Get router ports from parser
-        Parser routerParser = new Parser(args[0]);
+        String routerName = args[0];
+        Parser routerParser = new Parser(routerName);
         List<Integer> ports = routerParser.getRouterPorts();
 
         // Set up selector and bind all ports
@@ -95,18 +108,11 @@ public class Router {
             routerTable.put(netDestination, recordEntry);
         }
 
-        System.out.println("\n--- Routing Table ---");
-        for (String dest : routerTable.keySet()) {
-            Record entry = routerTable.get(dest);
-            System.out.println(dest + " -> " + entry);
+        printRouterTable();
+        if (routerName.equals("R1")){
+            System.out.println("sending out first router packet...");
+            sendStarterRouterPacket(routerParser);
         }
-        System.out.println("---------------------\n");
-
-        System.out.println("sending out first router packet...");
-        sendStarterRouterPacket(hasRun,routerParser);
-        hasRun = true;
-
-
 
         while (true) {
             selector.select(); // Block until something is ready
@@ -121,9 +127,14 @@ public class Router {
                     DatagramChannel channel = (DatagramChannel) key.channel();
                     buffer.clear();
 
-                     // SocketAddress sender = channel.receive(buffer);
-                     // MAY NEED THE FLIP
-                     buffer.flip();
+                    // NEED THE FLIP
+                    SocketAddress sender = channel.receive(buffer);
+                    if (sender == null){
+                        System.out.println("received null packet");
+                        continue;
+                    }
+
+                    buffer.flip();
 
                     String frame = new String(buffer.array(), 0, buffer.limit());
                     int port = channelPortMap.get(channel);
@@ -132,6 +143,7 @@ public class Router {
                     // Frame parsing
                     String[] frameParts = frame.split(";");
                     String frameType = frameParts[0];
+                    String senderRouterName = frameParts[1];
 
                     switch (frameType) {
                         case "2": // Flood packet
@@ -165,22 +177,38 @@ public class Router {
                         case "0": // Routing update
 
                             //TODO STOP FROM SENDING EMPTY PACKETS, make sure the table updating stops
+                            // skips "0;net1.R1
+                            String[] routerStrippedFrame = frame.substring(9).split(";");
 
                             List<String[]> routerFrameParts = new ArrayList<>();
-                            for (String item:frameParts) {
+                            for (String item:routerStrippedFrame) {
                                 if (item.equals("0")){
                                     continue;
                                 }
                                 String[] splitItem = item.split(",");
+                                System.out.println(Arrays.toString(splitItem));
                                 routerFrameParts.add(splitItem);
+                            }
+
+//                            String routerFrame = createRouterFrame(); // call to create router frame with all data in routerTable hashmap
+//                            String[] routerFrameParts = routerFrame.substring(2).split(";");
+//                            System.out.println("routerFrame: " + routerFrame +", routerFrameParts: "+ Arrays.toString(routerFrameParts));
+
+                            String senderRouterVIP = "";
+                            for (String neighbor:neighbors){
+                                if (neighbor.contains(senderRouterName)){
+                                    senderRouterVIP = neighbor;
+                                }
                             }
 
                             boolean updated = false;
 
                             for (String[] entry : routerFrameParts) {
-                                String sender = entry[0];
+                                System.out.println(Arrays.toString(entry));
+                                String senderVirtIP = entry[0];
                                 int distance = Integer.parseInt(entry[1]);
                                 String nextHop = entry[2];
+                                System.out.println(senderVirtIP + distance + nextHop);
 
                                 String destination = nextHop.split("\\.")[0];
                                 int totalCost = distance + 1;
@@ -188,22 +216,30 @@ public class Router {
                                 //bellman ford
                                 routerRecord current = routerTable.get(destination);
                                 if (current == null || totalCost <= distance) {
-                                    System.out.println("updated router table with: "+destination+": "+totalCost+", "+sender);
+                                    System.out.println("updated router table with: "+destination+": "+totalCost+", "+ senderRouterVIP);
                                     routerTable.remove(destination);
-                                    routerTable.put(destination, new routerRecord(totalCost, sender));
+                                    routerTable.put(destination, new routerRecord(totalCost, senderRouterVIP));
                                     updated = true;
                                 }
                             }
+                            if (updated) {
+                                printRouterTable();
+                            }
 
                             if (updated) {
-                                // Send updated vector to all neighbors
-                                String routerFrame = "0;"+ routerFrameParts.toString();
+                                String routerFrame = createRouterFrame(routerParser); // call to create router frame with all data in routerTable hashmap
+
                                 byte[] routerFrameBytes = routerFrame.getBytes();
 
-                                System.out.println("router table updated, sending to neighbors. frame: "+ routerFrame);
+                                System.out.println("Router table updated, sending to neighbors. Frame: "+ routerFrame);
 
                                 String[] routerNeighbors = routerParser.getNeighbors();
                                 for (String neighbor:routerNeighbors) {
+                                    if (neighbor.contains("S")){
+                                        // skips sending starting router packet to switches
+                                        continue;
+                                    }
+
                                     Parser neigborParser = new Parser(neighbor);
                                     DatagramPacket forwardRouterPacket = new DatagramPacket(routerFrameBytes, routerFrameBytes.length,neigborParser.getIP(), neigborParser.getPort());
 
@@ -215,7 +251,8 @@ public class Router {
                             }
                             break;
                         default:
-                            System.out.println("Unknown frame type: " + frameType);
+                            System.out.println("Unknown frame type: " + Arrays.toString(frameParts));
+                            System.exit(1);
                     }
                 }
             }

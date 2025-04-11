@@ -21,6 +21,10 @@ public class test {
 
         String str = list.toString();
         System.out.println(str); // Output: [Apple, Banana, Orange]
+
+
+        String test = "0;net1,1,net1.S1";
+        System.out.println(test.substring(2));
     }
 }
 
