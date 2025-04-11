@@ -212,7 +212,7 @@ public class Router {
                                 routerRecord current = routerTable.get(destination);
 
                                 if (current == null || totalCost < current.distance()) {
-//                                    System.out.println("UPDATED router table (sending to neighbors): " + destination + ": " + totalCost + ", " + senderRouterVIP);
+                                    System.out.println("UPDATED router table (sending to neighbors): " + destination + ": " + totalCost + ", " + senderRouterVIP);
                                     routerTable.remove(destination);
                                     routerTable.put(destination, new routerRecord(totalCost, senderRouterVIP));
                                     updated = true;
@@ -241,6 +241,8 @@ public class Router {
                                     forwardRouterSocket.close();
 
                                     printRouterTable();
+                                }else{
+                                    System.out.println("NO update");
                                 }
                             }
                             break;
